@@ -2,7 +2,10 @@
 
 # dependencies
 node_modules/
-
+# Environment variables
+.env
+superbase.ts
+expo-env.d.ts
 # Expo
 .expo/
 dist/
