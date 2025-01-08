@@ -1,37 +1,64 @@
-import React, { useState } from 'react'
-import { Alert, StyleSheet, View } from 'react-native'
-import { supabase } from '../superbase'
-import { Button, Input } from '@rneui/themed'
+// components/Auth.tsx
+import React, { useState } from 'react';
+import { Alert, StyleSheet, View } from 'react-native';
+import { supabase } from '../superbase';
+import { Button, Input } from '@rneui/themed';
+import { useRouter } from 'expo-router';  // Import useRouter
 
 export default function Auth() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
+  const router = useRouter();  // Initialize the router
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
   async function signInWithEmail() {
-    setLoading(true)
-    const { error } = await supabase.auth.signInWithPassword({
+    setLoading(true);
+    
+    // Attempt to sign in with email and password
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: email,
       password: password,
-    })
+    });
 
-    if (error) Alert.alert(error.message)
-    setLoading(false)
+    if (error) {
+      Alert.alert(error.message);
+      setLoading(false);
+      return;
+    }
+
+    // Check if the email is confirmed
+    if (data?.user?.email_confirmed_at) {
+      // If email is confirmed, navigate to Home
+      router.replace('/home');
+    } else {
+      // If email is not confirmed, alert the user
+      Alert.alert('Please check your inbox for email verification!');
+    }
+
+    setLoading(false);
   }
 
   async function signUpWithEmail() {
-    setLoading(true)
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.signUp({
+    setLoading(true);
+
+    const { data, error } = await supabase.auth.signUp({
       email: email,
       password: password,
-    })
+    });
 
-    if (error) Alert.alert(error.message)
-    if (!session) Alert.alert('Please check your inbox for email verification!')
-    setLoading(false)
+    if (error) {
+      Alert.alert(error.message);
+      setLoading(false);
+      return;
+    }
+
+    if (!data?.user?.email_confirmed_at) {
+      Alert.alert('Please check your inbox for email verification!');
+    } else {
+      Alert.alert('Your account has been created successfully!');
+    }
+
+    setLoading(false);
   }
 
   return (
@@ -64,7 +91,7 @@ export default function Auth() {
         <Button title="Sign up" disabled={loading} onPress={() => signUpWithEmail()} />
       </View>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -80,4 +107,4 @@ const styles = StyleSheet.create({
   mt20: {
     marginTop: 20,
   },
-})
+});
