@@ -4,6 +4,7 @@ import { supabase } from '../superbase';
 import { useRouter } from 'expo-router';
 import Header from '../components/Header';
 import EventCard from '../components/EventCard';  // Importowanie komponentu EventCard
+import { SearchBar } from 'react-native-screens';
 
 const { width } = Dimensions.get('window');
 
@@ -44,18 +45,17 @@ export default function Home() {
 
   return (
     <View style={styles.container}>
+      <SearchBar placeholder="Search for events" />  {/* Dodanie paska wyszukiwania */}
     
       <Text style={styles.title}>Welcome, {user?.email}!</Text>
       
 
       {/* FlatList renderuje EventCard z listą wydarzeń */}
       <FlatList 
-        ListHeaderComponent={Header}  // Użycie komponentu Header jako nagłówka
-        data={events}  // Przekazujemy dane wydarzeń
-        renderItem={({ item }) => (
-          <EventCard event={item} />  // Przekazanie danych o wydarzeniu do EventCard
-        )}
-        keyExtractor={(item) => item.id.toString()}  // Klucz dla każdego elementu
+        ListHeaderComponent={Header}
+        data={events} 
+        renderItem={({ item }) => <EventCard event={item} />}  // Przekazujemy `event` do EventCard
+        keyExtractor={(item) => item.id.toString()} 
       />
 
       <Button title="Sign Out" onPress={signOut} />
@@ -65,7 +65,7 @@ export default function Home() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
-  title: { fontSize: Math.min(40, width * 0.1), textAlign: 'center', color: 'black', marginTop: 10 },
+  title: { fontSize: Math.min(25, width * 0.1), textAlign: 'center', color: 'black', marginTop: 10 },
   subTitle: { fontSize: Math.min(18, width * 0.05), textAlign: 'center', color: '#7f8c8d', marginVertical: 20 },
   image: { width: 400, height: 200, resizeMode: 'contain', marginVertical: 20 },
 });
