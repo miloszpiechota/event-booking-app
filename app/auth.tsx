@@ -10,24 +10,34 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // async function signInWithEmail() {
+  //   setLoading(true);
+  //   const { data, error } = await supabase.auth.signInWithPassword({
+  //     email,
+  //     password,
+  //   });
+
+  //   if (error) {
+  //     Alert.alert(error.message);
+  //     setLoading(false);
+  //     return;
+  //   }
+
+  //   if (data?.user?.email_confirmed_at) {
+  //     router.replace('/home');
+  //   } else {
+  //     Alert.alert('Please check your inbox for email verification!');
+  //   }
+
+  //   setLoading(false);
+  // }
   async function signInWithEmail() {
     setLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+   
 
-    if (error) {
-      Alert.alert(error.message);
-      setLoading(false);
-      return;
-    }
-
-    if (data?.user?.email_confirmed_at) {
+   
       router.replace('/home');
-    } else {
-      Alert.alert('Please check your inbox for email verification!');
-    }
+    
 
     setLoading(false);
   }
@@ -51,6 +61,7 @@ export default function Auth() {
       <Input label="Email" leftIcon={{ type: 'font-awesome', name: 'envelope' }} onChangeText={setEmail} value={email} autoCapitalize="none" />
       <Input label="Password" leftIcon={{ type: 'font-awesome', name: 'lock' }} onChangeText={setPassword} value={password} secureTextEntry autoCapitalize="none" />
       <Button title="Sign in" disabled={loading} onPress={signInWithEmail} />
+      
       <Button title="Sign up" disabled={loading} onPress={signUpWithEmail} />
     </View>
   );

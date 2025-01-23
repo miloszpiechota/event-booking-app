@@ -17,7 +17,7 @@ const Header = () => {
 
         {/* Tekst na obrazie */}
         <View style={styles.textContainer}>
-          <Text style={styles.headerText}>Explore Events Near You!</Text>
+          <Text style={styles.headerText}>Explore events near You!</Text>
         </View>
 
         {/* Search Bar na dole ImageBackground */}
@@ -25,7 +25,7 @@ const Header = () => {
           <TextInput
             style={styles.searchBar}
             placeholder="Search for events"
-            placeholderTextColor="#aaa"
+            placeholderTextColor="white"
           />
         </View>
       </ImageBackground>
@@ -53,6 +53,7 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     padding: 10,
+    marginBottom: 50,
   },
   headerText: {
     fontSize: 30,
@@ -64,8 +65,8 @@ const styles = StyleSheet.create({
   searchBarContainer: {
     position: "absolute",
     bottom: 10, // Wystaje poza obrazek
-    left: "5%",
-    width: "90%", // Szerokość paska wyszukiwania
+   
+    width: "95%", // Szerokość paska wyszukiwania
     alignItems: "center",
   },
   searchBar: {
