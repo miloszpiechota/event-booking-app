@@ -7,6 +7,7 @@ const { width } = Dimensions.get('window');
 const Header = () => {
   return (
     <View style={styles.container}>
+        
       <ImageBackground
         style={styles.backgroundImage}
         source={require("../assets/images/backgroundImage.jpg")}

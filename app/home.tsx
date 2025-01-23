@@ -4,15 +4,16 @@ import { supabase } from '../superbase';
 import { useRouter } from 'expo-router';
 import Header from '../components/Header';
 import EventCard from '../components/EventCard';  // Importowanie komponentu EventCard
-import { SearchBar } from 'react-native-screens';
+import TopBar from '../components/TopBar';
+
 
 const { width } = Dimensions.get('window');
 
 export default function Home() {
   const router = useRouter();
-  const [user, setUser] = useState(null);
-  const [events, setEvents] = useState([]);  // Stan dla przechowywania listy wydarzeń
-
+  const [user, setUser] = useState<{ email: string | undefined } | null>(null);
+  const [events, setEvents] = useState<any[]>([]);  // Stan dla przechowywania listy wydarzeń
+  const [locations, setLocations] = useState<any[]>([]);  // Stan dla przechowywania listy lokalizacji
   useEffect(() => {
     const checkUser = async () => {
       const { data } = await supabase.auth.getUser();
@@ -35,8 +36,25 @@ export default function Home() {
       }
     };
 
+    const fetchLocations = async () => {
+      const { data, error } = await supabase
+        .from('location')
+        .select('*');
+  
+      if (error) {
+        console.error(error);
+      } else {
+        setLocations(data);
+      }
+    };
+
     fetchEvents();
+    fetchLocations();
   }, []);
+
+ 
+  
+
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -45,9 +63,9 @@ export default function Home() {
 
   return (
     <View style={styles.container}>
-      <SearchBar placeholder="Search for events" />  {/* Dodanie paska wyszukiwania */}
-    
-      <Text style={styles.title}>Welcome, {user?.email}!</Text>
+     
+    <TopBar user={user} events={events} locations={locations} />
+     
       
 
       {/* FlatList renderuje EventCard z listą wydarzeń */}
