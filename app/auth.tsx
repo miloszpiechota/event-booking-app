@@ -12,11 +12,18 @@ export default function Auth() {
 
   async function signInWithEmail() {
     setLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
     if (error) {
       Alert.alert(error.message);
-    } else if (data?.user?.email_confirmed_at) {
+      setLoading(false);
+      return;
+    }
+
+    if (data?.user?.email_confirmed_at) {
       router.replace('/home');
     } else {
       Alert.alert('Please check your inbox for email verification!');
@@ -25,13 +32,33 @@ export default function Auth() {
     setLoading(false);
   }
 
+  async function signUpWithEmail() {
+    setLoading(true);
+    const { data, error } = await supabase.auth.signUp({ email, password });
+
+    if (error) {
+      Alert.alert(error.message);
+      setLoading(false);
+      return;
+    }
+
+    Alert.alert('Please check your inbox for email verification!');
+    setLoading(false);
+  }
+
   return (
     <View style={styles.container}>
       <Input label="Email" leftIcon={{ type: 'font-awesome', name: 'envelope' }} onChangeText={setEmail} value={email} autoCapitalize="none" />
       <Input label="Password" leftIcon={{ type: 'font-awesome', name: 'lock' }} onChangeText={setPassword} value={password} secureTextEntry autoCapitalize="none" />
       <Button title="Sign in" disabled={loading} onPress={signInWithEmail} />
+      <Button title="Sign up" disabled={loading} onPress={signUpWithEmail} />
     </View>
   );
 }
 
-const styles = StyleSheet.create({ container: { marginTop: 40, padding: 12 } });
+const styles = StyleSheet.create({
+  container: {
+    marginTop: 40,
+    padding: 12,
+  },
+});
