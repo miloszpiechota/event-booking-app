@@ -32,6 +32,7 @@ export default function Home() {
           name,
           short_description,
           start_date,
+          end_date,
           image_url,
           location:location_id (city_name, street_name,apartment_number,zip_code,country_name,latitude,longitude) 
         `);
