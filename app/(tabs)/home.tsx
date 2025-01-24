@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, Image, Button, FlatList } from 'react-native';
-import { supabase } from '../superbase';
+import { supabase } from '../../superbase';
 import { useRouter } from 'expo-router';
-import Header from '../components/Header';
-import EventCard from '../components/EventCard';  // Importowanie komponentu EventCard
-import TopBar from '../components/TopBar';
+import Header from '../../components/Header';
+import EventCard from '../../components/EventCard';  // Importowanie komponentu EventCard
+import TopBar from '../../components/TopBar';
 
 
 const { width } = Dimensions.get('window');
@@ -76,7 +76,7 @@ export default function Home() {
         keyExtractor={(item) => item.id.toString()} 
       />
 
-      <Button title="Sign Out" onPress={signOut} />
+    
     </View>
   );
 }

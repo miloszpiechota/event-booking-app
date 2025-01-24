@@ -10,38 +10,14 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // async function signInWithEmail() {
-  //   setLoading(true);
-  //   const { data, error } = await supabase.auth.signInWithPassword({
-  //     email,
-  //     password,
-  //   });
-
-  //   if (error) {
-  //     Alert.alert(error.message);
-  //     setLoading(false);
-  //     return;
-  //   }
-
-  //   if (data?.user?.email_confirmed_at) {
-  //     router.replace('/home');
-  //   } else {
-  //     Alert.alert('Please check your inbox for email verification!');
-  //   }
-
-  //   setLoading(false);
-  // }
+  // Funkcja logowania
   async function signInWithEmail() {
     setLoading(true);
-   
-
-   
-      router.replace('/home');
-    
-
+    router.replace('/home');
     setLoading(false);
   }
 
+  // Funkcja rejestracji
   async function signUpWithEmail() {
     setLoading(true);
     const { data, error } = await supabase.auth.signUp({ email, password });
@@ -58,11 +34,40 @@ export default function Auth() {
 
   return (
     <View style={styles.container}>
-      <Input label="Email" leftIcon={{ type: 'font-awesome', name: 'envelope' }} onChangeText={setEmail} value={email} autoCapitalize="none" />
-      <Input label="Password" leftIcon={{ type: 'font-awesome', name: 'lock' }} onChangeText={setPassword} value={password} secureTextEntry autoCapitalize="none" />
-      <Button title="Sign in" disabled={loading} onPress={signInWithEmail} />
+      {/* Inputy do logowania/rejestracji */}
+      <Input
+        label="Email"
+        leftIcon={{ type: 'font-awesome', name: 'envelope' }}
+        onChangeText={setEmail}
+        value={email}
+        autoCapitalize="none"
+        containerStyle={styles.inputContainer}
+      />
+      <Input
+        label="Password"
+        leftIcon={{ type: 'font-awesome', name: 'lock' }}
+        onChangeText={setPassword}
+        value={password}
+        secureTextEntry
+        autoCapitalize="none"
+        containerStyle={styles.inputContainer}
+      />
+
+      {/* Przycisk logowania */}
+      <Button
+        title="Sign In"
+        buttonStyle={styles.button}
+        disabled={loading}
+        onPress={signInWithEmail}
+      />
       
-      <Button title="Sign up" disabled={loading} onPress={signUpWithEmail} />
+      {/* Przycisk rejestracji */}
+      <Button
+        title="Sign Up"
+        buttonStyle={[styles.button, styles.signUpButton]}
+        disabled={loading}
+        onPress={signUpWithEmail}
+      />
     </View>
   );
 }
@@ -72,9 +77,18 @@ const styles = StyleSheet.create({
     marginTop: 40,
     padding: 12,
   },
-
-    buttonContainer: { marginTop: 20 },
-    button: { padding: 15, borderRadius: 10, width: 150, alignItems: 'center' },
-    buttonText: { color: '#ffffff', fontSize: 18 },
-
+  inputContainer: {
+    marginBottom: 15, // Odstęp między inputami
+  },
+  button: {
+    padding: 15,
+    borderRadius: 10,
+    width: '100%', // Szerokość przycisku na 100% kontenera
+    marginVertical: 10, // Odstęp między przyciskami
+    backgroundColor: '#011C40', // Kolor przycisku
+    alignItems: 'center', // Wyrównanie tekstu w przycisku
+  },
+  signUpButton: {
+    backgroundColor: '#4CAF50', // Zmiana koloru dla przycisku "Sign Up"
+  },
 });

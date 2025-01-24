@@ -29,6 +29,6 @@ const styles = StyleSheet.create({
   title: { fontSize: Math.min(40, width * 0.1), textAlign: "center", color: 'black', marginTop: 40 },
   subTitle: { fontSize: Math.min(18, width * 0.05), textAlign: "center", color: '#7f8c8d', marginVertical: 20 },
   buttonContainer: { marginTop: 20 },
-  button: { padding: 15, borderRadius: 10, width: 150, alignItems: 'center' },
+  button: { padding: 15, borderRadius: 10, width: 350, alignItems: 'center' },
   buttonText: { color: '#ffffff', fontSize: 18 },
 });
