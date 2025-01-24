@@ -17,6 +17,7 @@ interface Event {
 }
 
 const EventCard: React.FC<{ event: Event }> = ({ event }) => {
+    console.log(event);
 
   const router = useRouter();
   return (
@@ -31,11 +32,11 @@ const EventCard: React.FC<{ event: Event }> = ({ event }) => {
       {/* Kontenery obok siebie */}
       <View style={styles.infoContainer}>
         
-        <Text style={styles.info} >
+        <Text  >
                 📅 {new Date(event.start_date).toLocaleDateString()} - {event.end_date ? new Date(event.end_date).toLocaleDateString() : 'None'}
               </Text>
         
-              <Text style={styles.info}>
+              <Text >
                 📍 {event.location?.street_name} {event.location?.apartment_number}, 
                 {event.location?.city_name} {event.location?.zip_code}, {event.location?.country_name}
               </Text>
@@ -43,12 +44,15 @@ const EventCard: React.FC<{ event: Event }> = ({ event }) => {
       </View>
 
       {/* Przycisk */}
-      <Button 
+      <View style={styles.area}>
+      <Button
+     
         title="Show Details" 
         color="black" 
         onPress={() => router.push({ pathname: `/event/${event.id}`, params: { eventData: JSON.stringify(event) } })}
 
       />
+      </View>
       
     </View>
   );
@@ -115,6 +119,20 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'center', // Wyśrodkowanie tekstu w kontenerze
   },
+  area: {
+    padding: 15,
+    borderRadius: 10,
+    width: '100%', // Szerokość przycisku na 100% kontenera
+    marginVertical: 10, // Odstęp między przyciskami
+    backgroundColor: '#fff', // Kolor przycisku
+    alignItems: 'center', // Wyrównanie tekstu w przycisku
+    borderColor: 'black',
+    borderWidth: 1,
+    
+  },
+  text_area:{
+    alignItems: 'center',
+  }
 });
 
 export default EventCard;
