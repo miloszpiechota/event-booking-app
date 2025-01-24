@@ -26,36 +26,28 @@ export default function Home() {
     // Pobieranie listy wydarzeń
     const fetchEvents = async () => {
       const { data, error } = await supabase
-        .from('event')  // Zmienna zależna od struktury bazy danych
-        .select('*');
-
+        .from('event')
+        .select(`
+          id,
+          name,
+          short_description,
+          start_date,
+          image_url,
+          location:location_id (city_name, street_name,apartment_number,zip_code,country_name,latitude,longitude) 
+        `);
+    
       if (error) {
         console.error(error);
       } else {
-        setEvents(data);  // Zapisanie pobranych wydarzeń do stanu
+        setEvents(data);
       }
     };
-
-    const fetchLocations = async () => {
-      const { data, error } = await supabase
-        .from('location')
-        .select('*');
-  
-      if (error) {
-        console.error(error);
-      } else {
-        setLocations(data);
-      }
-    };
-
+    
     fetchEvents();
-    fetchLocations();
+    
   }, []);
 
  
-  
-
-
   const signOut = async () => {
     await supabase.auth.signOut();
     router.replace('/');
@@ -65,7 +57,7 @@ export default function Home() {
     <View style={styles.container}>
      
     <TopBar user={user} events={events} locations={locations} />
-     
+    
       
 
       {/* FlatList renderuje EventCard z listą wydarzeń */}

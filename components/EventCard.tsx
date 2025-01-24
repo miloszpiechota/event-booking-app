@@ -7,6 +7,9 @@ interface Event {
   name: string;
   short_description: string;
   start_date: string;
+  location?: {
+    city_name: string;
+  };
 }
 
 const EventCard: React.FC<{ event: Event }> = ({ event }) => {
@@ -18,13 +21,14 @@ const EventCard: React.FC<{ event: Event }> = ({ event }) => {
       {/* Treść wydarzenia */}
       <Text style={styles.name}>{event.name ?? 'None'}</Text>
       <Text style={styles.description}>{event.short_description ?? 'None'}</Text>
+      <Text style={styles.description}>{event.location?.city_name ??'None'}</Text>
       <Text style={styles.date}>{new Date(event.start_date).toLocaleDateString() ?? 'None'}</Text>
       
       {/* Zawartość w jednej linii: ikona korony i przycisk */}
-      <View style={styles.footer}>
-        <FontAwesome6 name="crown" size={24} color="#FFD700" />
+      
+       
         <Button title="Show Details" color="black" />
-      </View>
+      
     </View>
   );
 };
