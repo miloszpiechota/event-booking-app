@@ -1,17 +1,49 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, Button, ScrollView } from 'react-native';
 import EventMap from '../../components/EventMap';
+import StarRating from '../../components/StarRating';
+import { supabase } from '@/superbase';
 const EventDetails = () => {
   const router = useRouter();
   const { eventData } = useLocalSearchParams(); // Pobiera dane z URL
-
+  const [averageRating, setAverageRating] = useState<number | null>(null);
+  const [userRating, setUserRating] = useState<number | null>(null);
   if (!eventData) {
     return <Text>Event not found</Text>;
   }
 
   const event = JSON.parse(eventData as string); // Parsujemy event do obiektu
-
+  const fetchRating = async () => {
+    const { data, error } = await supabase
+      .from('event_rate')
+      .select('rating')
+      .eq('event_id', event.id);
+  
+    if (!error && data.length > 0) {
+      const avg = data.reduce((sum, r) => sum + r.rating, 0) / data.length;
+      setAverageRating(avg);
+    }
+  };
+  
+  fetchRating();
+  
+  const handleRate = async (rating: number) => {
+    setUserRating(rating);
+  
+    const { error } = await supabase.from('event_rate').insert([
+      {
+        rating,
+        event_id: event.id,
+        user_id: user?.id, // Załóżmy, że masz `user` ze `supabase.auth.getUser()`
+        created_at: new Date().toISOString(),
+      },
+    ]);
+  
+    if (error) console.error('Error saving rating:', error);
+    else fetchRating(); // Odśwież średnią ocenę
+  };
+  
   return (
     <ScrollView style={styles.container}>
       <Image source={{ uri: event.image_url }} style={styles.image} />
@@ -29,6 +61,10 @@ const EventDetails = () => {
         📍 {event.location?.street_name} {event.location?.apartment_number}, 
         {event.location?.city_name} {event.location?.zip_code}, {event.location?.country_name}
       </Text>
+      <View style={styles.ratingContainer}>
+  <Text style={styles.info}>⭐ Average rating: {averageRating ? averageRating.toFixed(1) : 'No ratings yet'}</Text>
+  <StarRating onRate={handleRate} />
+</View>
 
 <View style={styles.area}>
 <Text >Seats number: {event.seats_number}</Text>
@@ -84,7 +120,17 @@ const styles = StyleSheet.create({
   },
   text_area:{
     alignItems: 'center',
-  }
+  },
+  ratingContainer: {
+    alignItems: 'center',
+    marginTop: 15,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 10,
+    backgroundColor: '#fff',
+  },
+  
 });
 
 export default EventDetails;
