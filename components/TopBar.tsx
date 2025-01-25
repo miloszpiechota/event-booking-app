@@ -26,7 +26,7 @@ const TopBar = ({ user, events, locations }: TopBarProps) => {
       <TouchableOpacity style={styles.locationContainer}>
         <FontAwesome6 name="location-dot" size={24} color="white" />
         <Text style={styles.locationText}>
-          {locations[0]?.city_name || 'Unknown City'}
+          {locations[0]?.city_name || 'Select city'}
         </Text>
       </TouchableOpacity>
     </View>

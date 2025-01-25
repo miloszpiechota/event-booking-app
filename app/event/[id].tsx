@@ -76,7 +76,16 @@ const EventDetails = () => {
         <EventMap location={{ latitude: event.location.latitude, longitude: event.location.longitude }} />
       )}
 
-      <Button title="Book Ticket" onPress={() => router.back()} />
+      {/* Przycisk */}
+            <View style={styles.area}>
+            <Button
+           
+              title="Book Ticket" 
+              color="black" 
+              onPress={() => router.push({ pathname: `/payment/${event.id}`, params: { eventData: JSON.stringify(event) } })}
+      
+            />
+            </View>
     </ScrollView>
   );
 };
@@ -130,6 +139,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: '#fff',
   },
+
+   
+   
   
 });
 
