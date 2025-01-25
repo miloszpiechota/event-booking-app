@@ -67,7 +67,7 @@ const EventDetails = () => {
 </View>
 
 <View style={styles.area}>
-<Text >Seats number: {event.seats_number}</Text>
+
 </View>
       
 

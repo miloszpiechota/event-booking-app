@@ -10,7 +10,7 @@ import TopBar from '../../components/TopBar';
 const { width } = Dimensions.get('window');
 
 export default function Home() {
-  
+
   const router = useRouter();
   const [user, setUser] = useState<{ email: string | undefined } | null>(null);
   const [events, setEvents] = useState<any[]>([]);  // Stan dla przechowywania listy wydarzeń
@@ -33,12 +33,13 @@ export default function Home() {
           name,
           short_description,
           long_description,
-          seats_number,
+          
           start_date,
           end_date,
           image_url,
-          location:location_id (city_name, street_name,apartment_number,zip_code,country_name,latitude,longitude)
+          location:location_id (city_name, street_name,apartment_number,zip_code,country_name,latitude,longitude),
           event_category:category_id (name)
+          
         `);
     
       if (error) {
