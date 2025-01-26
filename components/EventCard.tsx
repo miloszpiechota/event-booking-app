@@ -31,6 +31,8 @@ const EventCard: React.FC<{ event: Event }> = ({ event }) => {
       {/* Treść wydarzenia */}
       <Text style={styles.name}>{event.name ?? 'None'}</Text>
       <Text style={styles.name}>{event.event_category?.name}</Text>
+      
+
       <Text style={styles.description}>{event.short_description ?? 'None'}</Text>
 
       {/* Kontenery obok siebie */}

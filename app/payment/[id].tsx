@@ -1,9 +1,10 @@
 import { useLocalSearchParams } from 'expo-router';
-import React from 'react'
-import { ScrollView, StyleSheet,View,Text,Image } from 'react-native'
+import React, { useState } from 'react'
+import { ScrollView, StyleSheet,View,Text,Image, TouchableOpacity} from 'react-native'
 
 const TicketPayment = () => {
   const { eventData } = useLocalSearchParams();
+  const [selectedOption, setSelectedOption] = useState('standard');
   if (!eventData) {
       return <Text>Event not found</Text>;
     }
@@ -36,22 +37,56 @@ const TicketPayment = () => {
     hour12: false, // Ustawienie 24-godzinnego formatu
   })}
 </Text>
+<View style={styles.separator}></View>
+
+  
+
+
         </View>
 
         
               
         
-              <Text style={styles.info}>
-                📅 {new Date(event.start_date).toLocaleDateString()} - {event.end_date ? new Date(event.end_date).toLocaleDateString() : 'None'}
-              </Text>
+
         
-              <Text style={styles.info}>
-                📍 {event.location?.street_name} {event.location?.apartment_number}, 
-                {event.location?.city_name} {event.location?.zip_code}, {event.location?.country_name}
-              </Text>
+             
               
               <View style={styles.area}>
-              
+              <Text style={styles.title}> Select pricing option:</Text>
+<View style={styles.segmentedContainer}>
+  <TouchableOpacity
+    style={[
+      styles.segmentButton,
+      selectedOption === 'standard' ? styles.segmentButtonSelected : styles.segmentButtonUnselected
+    ]}
+    onPress={() => setSelectedOption('standard')}
+  >
+    <Text style={[styles.segmentText, selectedOption === 'standard' ? styles.segmentTextSelected : styles.segmentTextUnselected]}>
+      Standard
+    </Text>
+  </TouchableOpacity>
+
+  <TouchableOpacity
+    style={[
+      styles.segmentButton,
+      selectedOption === 'vip' ? styles.segmentButtonSelected : styles.segmentButtonUnselected
+    ]}
+    onPress={() => setSelectedOption('vip')}
+  >
+    <Text style={[styles.segmentText, selectedOption === 'vip' ? styles.segmentTextSelected : styles.segmentTextUnselected]}>
+      VIP
+    </Text>
+    
+  </TouchableOpacity>
+  
+</View>
+<Text style={styles.info}>
+      Selected: {selectedOption === 'standard' ? 'Standard' : 'VIP'}
+    </Text>
+    <Text style={styles.info}>
+      Price: {selectedOption === 'standard' ? event.event_ticket?.ticket_pricing?.ticket_price : event.event_ticket?.ticket_pricing?.vip_price}
+    </Text>
+
               </View>
               
  
@@ -86,21 +121,13 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 10,
   },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginTop: 10,
-  },
+ 
   description: {
     fontSize: 16,
     color: '#555',
     marginTop: 10,
   },
-  info: {
-    fontSize: 14,
-    color: '#333',
-    marginTop: 10,
-  },
+  
   area: {
     padding: 15,
     borderRadius: 10,
@@ -115,16 +142,45 @@ const styles = StyleSheet.create({
   text_area:{
     alignItems: 'center',
   },
-  ratingContainer: {
-    alignItems: 'center',
-    marginTop: 15,
+ 
+ 
+  
+  infoContainer: { alignItems: 'center', padding: 15, borderRadius: 10, borderWidth: 1, borderColor: '#ddd' },
+  title: { fontSize: 22, fontWeight: 'bold', marginTop: 10 },
+  info: { fontSize: 16, color: '#333', marginTop: 15 },
+  segmentedContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 10,
+    
+  },
+  segmentButton: {
+    flex: 1,
     padding: 10,
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
-    backgroundColor: '#fff',
+    borderColor: '#333',
+    alignItems: 'center',
   },
-
+  segmentButtonSelected: {
+    backgroundColor: '#333',
+  },
+  segmentButtonUnselected: {
+    backgroundColor: 'white',
+  },
+  segmentText: {
+    fontSize: 16,
+  },
+  segmentTextSelected: {
+    color: 'white',
+  },
+  segmentTextUnselected: {
+    color: 'black',
+  },
+  separator: {
+    height: 1,
+    backgroundColor: 'black',
+    marginVertical: 12,
+  },
    
    
   
