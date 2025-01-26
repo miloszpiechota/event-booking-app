@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import Header from '../../components/Header';
 import EventCard from '../../components/EventCard';  // Importowanie komponentu EventCard
 import TopBar from '../../components/TopBar';
-
+import { fetchEvents } from '../../utils/fetchEvents';
 
 const { width } = Dimensions.get('window');
 
@@ -24,33 +24,12 @@ export default function Home() {
 
     checkUser();
 
-    // Pobieranie listy wydarzeń
-    const fetchEvents = async () => {
-      const { data, error } = await supabase
-        .from('event')
-        .select(`
-          id,
-          name,
-          short_description,
-          long_description,
-          
-          start_date,
-          end_date,
-          image_url,
-          location:location_id (city_name, street_name,apartment_number,zip_code,country_name,latitude,longitude),
-          event_category:category_id (name)
-          
-        `);
-    
-      if (error) {
-        console.error(error);
-      } else {
-        setEvents(data);
-      }
+    const loadEvents = async () => {
+      const eventsData = await fetchEvents();
+      setEvents(eventsData);
     };
-    
-    fetchEvents();
-    
+
+    loadEvents();
   }, []);
 
  
