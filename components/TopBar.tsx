@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, View, Text, Dimensions, TouchableOpacity } from 'react-native';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+import { router } from 'expo-router';
 
 interface User {
   email?: string;
@@ -23,7 +24,8 @@ const TopBar = ({ user, events, locations }: TopBarProps) => {
       </Text>
 
       {/* Ikona lokalizacji oraz miasto */}
-      <TouchableOpacity style={styles.locationContainer}>
+      <TouchableOpacity style={styles.locationContainer}
+      onPress={() =>  router.replace('/location')}>
         <FontAwesome6 name="location-dot" size={24} color="white" />
         <Text style={styles.locationText}>
           {locations[0]?.city_name || 'Select city'}
