@@ -6,6 +6,7 @@ import Header from '../../components/Header';
 import EventCard from '../../components/EventCard';  // Importowanie komponentu EventCard
 import TopBar from '../../components/TopBar';
 import { fetchEvents } from '../../utils/fetchEvents';
+import { useSession } from '@/utils/useSession';
 
 const { width } = Dimensions.get('window');
 
@@ -15,15 +16,8 @@ export default function Home() {
   const [user, setUser] = useState<{ email: string | undefined } | null>(null);
   const [events, setEvents] = useState<any[]>([]);  // Stan dla przechowywania listy wydarzeń
   const [locations, setLocations] = useState<any[]>([]);  // Stan dla przechowywania listy lokalizacji
+  const session = useSession();  // Używamy hooka do pobrania sesji
   useEffect(() => {
-    const checkUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      if (!data?.user) router.replace('/');
-      else setUser(data.user);
-    };
-
-    checkUser();
-
     const loadEvents = async () => {
       const eventsData = await fetchEvents();
       setEvents(eventsData);
@@ -32,16 +26,18 @@ export default function Home() {
     loadEvents();
   }, []);
 
- 
   const signOut = async () => {
     await supabase.auth.signOut();
     router.replace('/');
   };
 
+ 
+  
+
   return (
     <View style={styles.container}>
      
-    <TopBar user={user} events={events} locations={locations} />
+    <TopBar user={session?.user} events={events} locations={locations} />
     
       
 
@@ -49,7 +45,7 @@ export default function Home() {
       <FlatList 
         ListHeaderComponent={Header}
         data={events} 
-        renderItem={({ item }) => <EventCard event={item} />}  // Przekazujemy `event` do EventCard
+        renderItem={({ item }) => <EventCard event={item} user={session?.user}/>}  // Przekazujemy `event` do EventCard
         keyExtractor={(item) => item.id.toString()} 
       />
 

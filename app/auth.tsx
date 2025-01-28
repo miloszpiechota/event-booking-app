@@ -11,10 +11,26 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
 
   // Funkcja logowania
+  // async function signInWithEmail() {
+  //   setLoading(true);
+  //   router.replace('/home');
+  //   setLoading(false);
+  // }
+
   async function signInWithEmail() {
-    setLoading(true);
-    router.replace('/home');
-    setLoading(false);
+    setLoading(true)
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password,
+    })
+
+    if (error){
+      Alert.alert(error.message)
+    } else {
+      router.replace('/home');
+    }
+    setLoading(false)
+    
   }
 
   // Funkcja rejestracji

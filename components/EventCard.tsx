@@ -1,7 +1,10 @@
+// components/EventCard.tsx
 import React from 'react';
 import { View, Text, StyleSheet, Image, Button } from 'react-native';
 import { useRouter } from 'expo-router';
+
 interface Event {
+  id: string;
   image_url?: string;
   name: string;
   short_description: string;
@@ -19,10 +22,14 @@ interface Event {
   };
 }
 
-const EventCard: React.FC<{ event: Event }> = ({ event }) => {
-    console.log(event);
+interface EventCardProps {
+  event: Event;
+  user?: { email: string | undefined } | null;  // Dodajemy user jako prop
+}
 
+const EventCard: React.FC<EventCardProps> = ({ event, user }) => {
   const router = useRouter();
+
   return (
     <View style={styles.card}>
       {/* Obrazek */}
@@ -31,35 +38,34 @@ const EventCard: React.FC<{ event: Event }> = ({ event }) => {
       {/* Treść wydarzenia */}
       <Text style={styles.name}>{event.name ?? 'None'}</Text>
       <Text style={styles.name}>{event.event_category?.name}</Text>
-      
-
       <Text style={styles.description}>{event.short_description ?? 'None'}</Text>
 
-      {/* Kontenery obok siebie */}
+      {/* Informacje o dacie i lokalizacji */}
       <View style={styles.infoContainer}>
-        
-        <Text  >
-                📅 {new Date(event.start_date).toLocaleDateString()} - {event.end_date ? new Date(event.end_date).toLocaleDateString() : 'None'}
-              </Text>
-        
-              <Text >
-                📍 {event.location?.street_name} {event.location?.apartment_number}, 
-                {event.location?.city_name} {event.location?.zip_code}, {event.location?.country_name}
-              </Text>
-
+        <Text>
+          📅 {new Date(event.start_date).toLocaleDateString()} - {event.end_date ? new Date(event.end_date).toLocaleDateString() : 'None'}
+        </Text>
+        <Text>
+          📍 {event.location?.street_name} {event.location?.apartment_number}, 
+          {event.location?.city_name} {event.location?.zip_code}, {event.location?.country_name}
+        </Text>
       </View>
+
+      {/* Pokazanie danych użytkownika (jeśli istnieją) */}
+      {user && (
+        <View style={styles.userInfo}>
+          <Text>User Email: {user.email}</Text>
+        </View>
+      )}
 
       {/* Przycisk */}
       <View style={styles.area}>
-      <Button
-     
-        title="Show Details" 
-        color="black" 
-        onPress={() => router.push({ pathname: `/event/${event.id}`, params: { eventData: JSON.stringify(event) } })}
-
-      />
+        <Button
+          title="Show Details" 
+          color="black" 
+          onPress={() => router.push({ pathname: `/event/${event.id}`, params: { eventData: JSON.stringify(event), userData: JSON.stringify(user) } })}
+        />
       </View>
-      
     </View>
   );
 };
@@ -96,49 +102,27 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   infoContainer: {
-    flexDirection: 'column',  // Ustawienie lokalizacji i daty obok siebie
-    justifyContent: 'space-between', // Rozłożenie na całą szerokość
-    alignItems: 'flex-start', // Wyrównanie do góry
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginTop: 10,
   },
-  locationContainer: {
+  userInfo: {
+    marginTop: 10,
     padding: 10,
     backgroundColor: '#f3f3f3',
     borderRadius: 5,
-    flex: 1, // Równomierne rozłożenie
-    marginRight: 10, // Odstęp od drugiego kontenera
-  },
-  dateContainer: {
-    padding: 10,
-    backgroundColor: '#f3f3f3',
-    borderRadius: 5,
-    flex: 1, // Równomierne rozłożenie
-  },
-  locationText: {
-    fontSize: 14,
-    color: '#444',
-    fontWeight: '500',
-  },
-  dateText: {
-    fontSize: 14,
-    color: '#444',
-    fontWeight: '500',
-    textAlign: 'center', // Wyśrodkowanie tekstu w kontenerze
   },
   area: {
     padding: 15,
     borderRadius: 10,
-    width: '100%', // Szerokość przycisku na 100% kontenera
-    marginVertical: 10, // Odstęp między przyciskami
-    backgroundColor: '#fff', // Kolor przycisku
-    alignItems: 'center', // Wyrównanie tekstu w przycisku
+    width: '100%',
+    marginVertical: 10,
+    backgroundColor: '#fff',
+    alignItems: 'center',
     borderColor: 'black',
     borderWidth: 1,
-    
   },
-  text_area:{
-    alignItems: 'center',
-  }
 });
 
 export default EventCard;
