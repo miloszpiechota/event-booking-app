@@ -1,7 +1,7 @@
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { fetchPaymentMethods } from "@/utils/fetchPaymentMethods";
-import { Keyboard, TouchableWithoutFeedback } from "react-native";
+import { Alert, Keyboard, TouchableWithoutFeedback } from "react-native";
 
 import {
   ScrollView,
@@ -16,7 +16,7 @@ import DropDownPicker from "react-native-dropdown-picker";
 const TicketPayment = () => {
   const { eventData } = useLocalSearchParams();
   const [selectedOption, setSelectedOption] = useState("standard");
-  const [ticketQuantity, setTicketQuantity] = useState(0);
+  const [ticketQuantity, setTicketQuantity] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState([
@@ -28,7 +28,14 @@ const TicketPayment = () => {
   useEffect(() => {
     const loadPaymentMethods = async () => {
       const paymentMethods = await fetchPaymentMethods();
-      console.log(paymentMethods);
+      if (paymentMethods.length > 0) {
+        setItems(
+          paymentMethods.map((method) => ({
+            label: method.name, // Załóżmy, że kolumna w bazie to "name"
+            value: method.id, // Załóżmy, że kolumna w bazie to "id"
+          }))
+        );
+      }
     };
 
     loadPaymentMethods();
@@ -56,7 +63,7 @@ const TicketPayment = () => {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
     <View style={styles.container}>
       <View style={styles.info_container}>
-        <Text style={styles.title}>Ticket: {event.name}</Text>
+        <Text style={styles.title}>Ticket: {event.event_ticket.name}</Text>
         <Text style={styles.info}>Category: {event.event_category?.name}</Text>
         <Text style={styles.info}>
           Start date:{" "}
@@ -144,10 +151,23 @@ const TicketPayment = () => {
         <TextInput
           style={styles.quantityInput}
           keyboardType="numeric"
-          value={ticketQuantity}
-          onChangeText={(text) => {
-            const numericValue = text.replace(/[^0-9]/g, ""); // Remove non-numeric characters
-            setTicketQuantity(numericValue === "" ? "1" : numericValue);
+          value={ticketQuantity === 0 ? "" : ticketQuantity.toString()}
+          onChangeText={(value) => {
+            if (value === "") {
+              setTicketQuantity(0);
+            } else {
+              const newQuantity = parseInt(value, 10);
+              if (!isNaN(newQuantity) && newQuantity > 0) {
+                if (newQuantity <= event.event_ticket.quantity) {
+                  setTicketQuantity(newQuantity);
+                } else {
+                  setTicketQuantity(event.event_ticket.quantity);
+                  Alert.alert("Exceeded ticket limit", `The maximum number of tickets is ${event.event_ticket.quantity}`);
+                }
+              } else {
+                Alert.alert("Invalid ticket quantity", "The number of tickets must be greater than 0.");
+              }
+            }
           }}
         />
 
@@ -165,6 +185,7 @@ const TicketPayment = () => {
         />
       </View>
 
+      <View style={styles.separator} />
       <View style={styles.totalContainer}>
         <Text style={styles.totalText}>Fee:</Text>
         <Text style={styles.totalText}>
@@ -228,16 +249,17 @@ const styles = StyleSheet.create({
   separator: {
     height: 1,
     backgroundColor: "black",
-    marginVertical: 12,
+
+    marginTop:30
   },
   quantityInput: {
-    width: "80%",
+    width: "100%",
     height: 40,
     marginVertical: 10,
     paddingLeft: 10,
     borderColor: "#ddd",
     borderWidth: 1,
-    borderRadius: 5,
+    borderRadius: 10,
     fontSize: 16,
   },
   dropdown: {
@@ -245,16 +267,20 @@ const styles = StyleSheet.create({
     borderColor: "#ddd",
     borderRadius: 10,
     marginTop: 10,
+    width: "100%",
+    height: 40,
   },
   dropdownContainer: {
     backgroundColor: "#fff",
     borderColor: "#ddd",
     borderRadius: 10,
+    
   },
   totalContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 10,
+    marginTop: 20,
+    
   },
   totalText: {
     fontSize: 16,

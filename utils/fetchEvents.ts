@@ -24,6 +24,7 @@ export const fetchEvents = async () => {
       ),
       event_category:category_id (name),
       event_ticket:event_ticket_id (
+        name,
         quantity,
         qr_code,
         ticket_pricing:ticket_pricing_id (
