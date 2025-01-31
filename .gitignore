@@ -6,6 +6,8 @@ node_modules/
 .env
 superbase.ts
 expo-env.d.ts
+supabase/functions/
+supabase/node_modules/
 # Expo
 .expo/
 dist/

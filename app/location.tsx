@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Dimensions, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Dimensions, TouchableOpacity, BackHandler } from 'react-native';
 
 import { fetchLocations } from '@/utils/fetchLocations';  // Załóżmy, że masz funkcję fetchLocations
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import SearchBar from '@/components/SearchBar';
 
 const { width, height } = Dimensions.get('window');  // Pobieramy wymiary ekranu
@@ -17,7 +17,22 @@ export default function Location() {
       setLocations(locationsData);
     }
     loadLocations();
+
+      // Nasłuchiwanie na przycisk Back
+    const backAction = () => {
+      router.back();  // Powrót do poprzedniego ekranu
+      return true;  // Zatrzymuje domyślną akcję
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress', backAction
+    );
+
+    // Clean up: usuwamy nasłuchiwanie po opuszczeniu ekranu
+    return () => backHandler.remove();
   }, []);  // useEffect uruchamiany raz po załadowaniu komponentu
+
+ 
 
   // Funkcja renderująca każdy element w FlatList
   const renderLocation = ({ item }: { item: any }) => (

@@ -9,6 +9,7 @@ import {
   Button,
   ScrollView,
   Alert,
+  TouchableOpacity,
 } from "react-native";
 import EventMap from "../../components/EventMap";
 import StarRating from "../../components/StarRating";
@@ -28,7 +29,7 @@ const EventDetails = () => {
 
   useEffect(() => {
     const loadRating = async () => {
-      const ratings = await fetchRatings(event.id);
+      const ratings: { rating: number }[] = await fetchRatings(event.id);
       if (ratings.length > 0) {
         setAverageRating(
           ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
@@ -39,10 +40,10 @@ const EventDetails = () => {
   }, []);
 
   // Zmień funkcję handleRate, aby korzystała z createRating
-const handleRate = (rating: number) => {
+  const handleRate = (rating: number) => {
     createRating(rating, event.id, user?.id, setUserRating);
   };
-  
+
   return (
     <ScrollView style={styles.container}>
       <Image source={{ uri: event.image_url }} style={styles.image} />
@@ -82,18 +83,18 @@ const handleRate = (rating: number) => {
         />
       )}
 
-      {/* Przycisk */}
-      <View style={styles.area}>
-        <Button
-          title="Book Ticket"
-          color="black"
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={[styles.button, styles.signUpButton]}
           onPress={() =>
             router.push({
               pathname: `/payment/${event.id}`,
               params: { eventData: JSON.stringify(event) },
             })
           }
-        />
+        >
+          <Text style={styles.buttonText}>Book Ticket</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -138,11 +139,32 @@ const styles = StyleSheet.create({
   ratingContainer: {
     alignItems: "center",
     marginTop: 15,
+    marginBottom: 15,
     padding: 10,
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 10,
     backgroundColor: "#fff",
+  },
+  buttonContainer: {
+    marginVertical: 10,
+    width: "100%",
+    alignItems: "center",
+  },
+  button: {
+    padding: 15,
+    borderRadius: 10,
+    width: "100%",
+    backgroundColor: "#011C40", // Tło przycisku
+    alignItems: "center",
+  },
+  signUpButton: {
+    backgroundColor: "#011C40", // Tło dla przycisku
+  },
+  buttonText: {
+    color: "#fff", // Zmieniamy kolor tekstu na biały
+    fontSize: 16, // Rozmiar czcionki
+    fontWeight: "bold", // Pogrubienie tekstu
   },
 });
 

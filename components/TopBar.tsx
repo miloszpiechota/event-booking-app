@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, View, Text, Dimensions, TouchableOpacity } from 'react-native';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { router } from 'expo-router';
@@ -14,6 +14,7 @@ interface TopBarProps {
 }
 
 const { width } = Dimensions.get('window');
+
 
 const TopBar = ({ user, events, locations }: TopBarProps) => {
   return (
