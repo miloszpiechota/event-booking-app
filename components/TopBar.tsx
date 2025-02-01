@@ -26,7 +26,7 @@ const TopBar = ({ user, events, locations }: TopBarProps) => {
 
       {/* Ikona lokalizacji oraz miasto */}
       <TouchableOpacity style={styles.locationContainer}
-      onPress={() =>  router.replace('/location')}>
+      onPress={() => router.push("/location")}>
         <FontAwesome6 name="location-dot" size={24} color="white" />
         <Text style={styles.locationText}>
           {locations[0]?.city_name || 'Select city'}
