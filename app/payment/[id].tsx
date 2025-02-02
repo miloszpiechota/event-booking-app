@@ -79,11 +79,13 @@ const TicketPayment = () => {
   
   const handlePayment = async () => {
     try {
+      // 1. Check if payment method is selected
       if (!paymentMethod) {
         Alert.alert("Error", "Please select a payment method.");
         return;
       }
   
+      // 2. Get the user's authentication token and ID
       const token = await getUserToken();
       const userId = await getUserId();
   
@@ -92,51 +94,57 @@ const TicketPayment = () => {
         return;
       }
   
-      // Przygotowujemy pojedynczy obiekt ticket_order
+      // 3. Prepare the ticket_order object with the required fields
       const ticket_order = {
-        event_ticekt_id: event.event_ticket.id, // lub inny identyfikator biletu, jeśli taki masz
-        quantity: ticketQuantity,
+        event_ticket_id: event.event_ticket.id, // Use the event's ticket ID
+        quantity: ticketQuantity, // Number of tickets
         unit_price:
           selectedOption === "standard"
             ? event.event_ticket.ticket_pricing.ticket_price
-            : event.event_ticket.ticket_pricing.vip_price,
-        ticket_pricing_id: event.event_ticket.ticket_pricing.id, // musisz mieć tę wartość
-        status:"paid",
-        creared_at: new Date().toISOString(),
+            : event.event_ticket.ticket_pricing.vip_price, // Price based on selected option
+        ticket_pricing_id: event.event_ticket.ticket_pricing.id, // ID of the ticket pricing
+        status: "paid", // Payment status
+        created_at: new Date().toISOString(), // Current timestamp for created_at
       };
-      
-      const requestBody = {
-        user_id: userId,
-        ticket_order, // teraz obiekt zawiera wszystkie wymagane dane
-        payment_method_id: paymentMethod,
-        total_price: getTotalPrice(),
-        event_ticket_id: event.event_ticket.id, // przekazujesz jeśli tabela tego wymaga
-      };
-      
   
+      // 4. Create the request body
+      const requestBody = {
+        user_id: userId, // The user's ID
+        ticket_order: ticket_order, // Ticket order details
+        payment_method_id: paymentMethod, // Payment method ID
+        total_price: getTotalPrice(), // Total price for the order
+        event_ticket_id: event.event_ticket.id, // Event ticket ID (for the order)
+      };
+  
+      // 5. Log the data being sent to the API
       console.log("🛒 Wysyłane dane do API:", JSON.stringify(requestBody, null, 2));
   
+      // 6. Call the API to process the payment
       const response = await fetch(
         "https://azbpvxuvzjcahzrkwuxk.supabase.co/functions/v1/payment-process",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, // Authorization token
           },
-          body: JSON.stringify(requestBody),
+          body: JSON.stringify(requestBody), // Send the request body to the API
         }
       );
   
+      // 7. Parse the response
       const data = await response.json().catch(() => null);
       console.log("📩 Odpowiedź serwera:", data);
   
+      // 8. Check if the response was successful
       if (!response.ok || !data) {
         Alert.alert("Error", "Server error. Please try again.");
         return;
       }
   
+      // 9. If successful, show success message
       Alert.alert("Success", "Order placed successfully!");
+  
     } catch (error) {
       console.error("Payment error:", error);
       Alert.alert("Error", "Failed to process the payment.");
