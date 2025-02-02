@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { fetchPaymentMethods } from "@/utils/fetchPaymentMethods";
+import { fetchPaymentMethods } from "../../utils/fetchPaymentMethods.ts";
 import { Alert, Keyboard, TouchableWithoutFeedback } from "react-native";
 
 import {
@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
+import { supabase } from "../../superbase.ts";
 
 const TicketPayment = () => {
   const { eventData } = useLocalSearchParams();
@@ -30,7 +31,7 @@ const TicketPayment = () => {
       const paymentMethods = await fetchPaymentMethods();
       if (paymentMethods.length > 0) {
         setItems(
-          paymentMethods.map((method) => ({
+          paymentMethods.map((method: { name: any; id: any; }) => ({
             label: method.name, // Załóżmy, że kolumna w bazie to "name"
             value: method.id, // Załóżmy, że kolumna w bazie to "id"
           }))
@@ -46,7 +47,15 @@ const TicketPayment = () => {
   }
 
   const event = JSON.parse(eventData as string);
-
+  const getUserToken = async () => {
+    const { data, error } = await supabase.auth.getSession();
+    if (error || !data.session) {
+      console.error("User is not logged in or session is missing", error);
+      return null;
+    }
+    return data.session.access_token; // Zwracamy token JWT użytkownika
+  };
+  
   const getTotalPrice = () => {
     const price =
       selectedOption === "standard"
@@ -54,10 +63,89 @@ const TicketPayment = () => {
         : event.event_ticket?.ticket_pricing?.vip_price;
 
     return price
-      ? parseFloat(price) * parseInt(ticketQuantity) +
+      ? parseFloat(price) * parseInt(ticketQuantity.toString()) +
           event.event_ticket?.ticket_pricing?.fee
       : 0;
   };
+
+  const getUserId = async () => {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) {
+      console.error("User is not logged in", error);
+      return null;
+    }
+    return data.user.id; // Pobieramy ID użytkownika
+  };
+  
+  const handlePayment = async () => {
+    try {
+      if (!paymentMethod) {
+        Alert.alert("Error", "Please select a payment method.");
+        return;
+      }
+  
+      const token = await getUserToken();
+      const userId = await getUserId();
+  
+      if (!token || !userId) {
+        Alert.alert("Error", "User is not authenticated.");
+        return;
+      }
+  
+      // Przygotowujemy pojedynczy obiekt ticket_order
+      const ticket_order = {
+        event_ticekt_id: event.event_ticket.id, // lub inny identyfikator biletu, jeśli taki masz
+        quantity: ticketQuantity,
+        unit_price:
+          selectedOption === "standard"
+            ? event.event_ticket.ticket_pricing.ticket_price
+            : event.event_ticket.ticket_pricing.vip_price,
+        ticket_pricing_id: event.event_ticket.ticket_pricing.id, // musisz mieć tę wartość
+        status:"paid",
+        creared_at: new Date().toISOString(),
+      };
+      
+      const requestBody = {
+        user_id: userId,
+        ticket_order, // teraz obiekt zawiera wszystkie wymagane dane
+        payment_method_id: paymentMethod,
+        total_price: getTotalPrice(),
+        event_ticket_id: event.event_ticket.id, // przekazujesz jeśli tabela tego wymaga
+      };
+      
+  
+      console.log("🛒 Wysyłane dane do API:", JSON.stringify(requestBody, null, 2));
+  
+      const response = await fetch(
+        "https://azbpvxuvzjcahzrkwuxk.supabase.co/functions/v1/payment-process",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
+  
+      const data = await response.json().catch(() => null);
+      console.log("📩 Odpowiedź serwera:", data);
+  
+      if (!response.ok || !data) {
+        Alert.alert("Error", "Server error. Please try again.");
+        return;
+      }
+  
+      Alert.alert("Success", "Order placed successfully!");
+    } catch (error) {
+      console.error("Payment error:", error);
+      Alert.alert("Error", "Failed to process the payment.");
+    }
+  };
+  
+  
+  
+  
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -196,12 +284,30 @@ const TicketPayment = () => {
         <Text style={styles.totalText}>Total price:</Text>
         <Text style={styles.totalAmount}>${getTotalPrice().toFixed(2)}</Text>
       </View>
+
+      <TouchableOpacity style={styles.paymentButton} onPress={handlePayment}>
+  <Text style={styles.paymentButtonText}>Confirm Payment</Text>
+</TouchableOpacity>
+
     </View>
     </TouchableWithoutFeedback>
   );
 };
 
 const styles = StyleSheet.create({
+  paymentButton: {
+    backgroundColor: "#007AFF",
+    padding: 15,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 20,
+  },
+  paymentButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  
   container: {
     flex: 1,
     padding: 20,
