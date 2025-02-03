@@ -1,20 +1,20 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { fetchRatings } from "@/utils/fetchRatings";
+import { fetchRatings } from "../../utils/fetchRatings.ts";
 import {
   View,
   Text,
   StyleSheet,
   Image,
-  Button,
+  
   ScrollView,
-  Alert,
+  
   TouchableOpacity,
 } from "react-native";
-import EventMap from "../../components/EventMap";
-import StarRating from "../../components/StarRating";
-import { supabase } from "@/superbase";
-import { createRating } from "@/utils/createRatings";
+import EventMap from "../../components/EventMap.tsx";
+import StarRating from "../../components/StarRating.tsx";
+import { supabase } from "../../superbase.ts";
+import { createRating } from "../../utils/createRatings.ts";
 const EventDetails = () => {
   const router = useRouter();
   const { eventData, userData } = useLocalSearchParams();
@@ -88,10 +88,11 @@ const EventDetails = () => {
           style={[styles.button, styles.signUpButton]}
           onPress={() =>
             router.push({
-              pathname: `/payment/${event.id}`,
-              params: { eventData: JSON.stringify(event) },
+              pathname: "/payment/[id]",
+              params: { id: event.id.toString(), eventData: JSON.stringify(event) },
             })
           }
+          
         >
           <Text style={styles.buttonText}>Book Ticket</Text>
         </TouchableOpacity>

@@ -1,12 +1,12 @@
 import React from 'react';
 import { View, TextInput, StyleSheet } from 'react-native';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 
+import Fontisto from '@expo/vector-icons/Fontisto';
 // SearchBar komponent
 const SearchBar = () => {
   return (
     <View style={styles.searchInputContainer}>
-      <FontAwesome name="search" size={20} color="white" />
+      <Fontisto name="search" size={20} color="white" />
       <TextInput
         style={styles.searchBar}
         placeholder="Search for events"
@@ -28,8 +28,7 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     paddingHorizontal: 15,
-    fontSize: 16,
-    color: "white", // Kolor tekstu
+    
     elevation: 5, // Cień (Android)
     shadowColor: "#000", // Cień (iOS)
     shadowOffset: { width: 0, height: 2 },

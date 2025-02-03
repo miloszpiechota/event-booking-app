@@ -4,7 +4,7 @@ import { fetchPaymentMethods } from "../../utils/fetchPaymentMethods.ts";
 import { Alert, Keyboard, TouchableWithoutFeedback } from "react-native";
 
 import {
-  ScrollView,
+  
   StyleSheet,
   View,
   Text,

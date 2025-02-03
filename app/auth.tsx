@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
-import { supabase } from '../superbase';
+import { supabase } from '../superbase.ts';
 import { Button, Input } from '@rneui/themed';
 import { useRouter } from 'expo-router';
 
@@ -10,12 +10,6 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Funkcja logowania
-  // async function signInWithEmail() {
-  //   setLoading(true);
-  //   router.replace('/home');
-  //   setLoading(false);
-  // }
 
   async function signInWithEmail() {
     setLoading(true)
@@ -90,7 +84,7 @@ export default function Auth() {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 40,
+    marginTop: 90,
     padding: 12,
   },
   inputContainer: {

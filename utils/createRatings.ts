@@ -1,5 +1,5 @@
 import { Alert } from "react-native";
-import { supabase } from "@/superbase";
+import { supabase } from "../superbase.ts";
 
 export const createRating = async (
   rating: number,
