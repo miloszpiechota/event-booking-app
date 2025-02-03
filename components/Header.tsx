@@ -4,8 +4,11 @@ import SearchBar from './SearchBar.tsx';  // Importowanie SearchBar
 import FilterIcon from './FilterIcon.tsx';
 // Pobranie szerokości ekranu
 const { width } = Dimensions.get('window');
-
-const Header = () => {
+interface HeaderProps {
+  searchQuery: string;
+  onSearch: (text: string) => void;
+}
+const Header = ({ searchQuery, onSearch }: HeaderProps) => {
   return (
     <View style={styles.container}>
       <ImageBackground
@@ -23,7 +26,7 @@ const Header = () => {
         {/* Search Bar na dole ImageBackground */}
          {/* Kontener dla SearchBar oraz FilterIcon */}
          <View style={styles.searchBarContainer}>
-          <SearchBar />
+         <SearchBar value={searchQuery} onChangeText={onSearch} />
           <FilterIcon />
         </View>
       </ImageBackground>

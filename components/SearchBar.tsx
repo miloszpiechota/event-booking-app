@@ -2,8 +2,13 @@ import React from 'react';
 import { View, TextInput, StyleSheet } from 'react-native';
 
 import Fontisto from '@expo/vector-icons/Fontisto';
+
+interface SearchBarProps {
+  value: string;
+  onChangeText: (text: string) => void;
+}
 // SearchBar komponent
-const SearchBar = () => {
+const SearchBar = ({ value, onChangeText }: SearchBarProps) => {
   return (
     <View style={styles.searchInputContainer}>
       <Fontisto name="search" size={20} color="white" />
@@ -11,6 +16,8 @@ const SearchBar = () => {
         style={styles.searchBar}
         placeholder="Search for events"
         placeholderTextColor="white"
+        value={value}
+        onChangeText={onChangeText}
       />
     </View>
   );

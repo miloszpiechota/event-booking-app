@@ -16,7 +16,7 @@ export default function Home() {
   const [locations, setLocations] = useState<any[]>([]); // Jeśli potrzebujesz listy lokalizacji do innych celów
   const session = useSession(); // Używamy hooka do pobrania sesji
   const { selectedLocation } = useContext(SelectedLocationContext); // Pobieramy wybraną lokalizację z kontekstu
-
+  const [searchQuery, setSearchQuery] = useState<string>(''); // Stan dla wyszukiwanego tekstu
   useEffect(() => {
     const loadEvents = async () => {
       const eventsData = await fetchEvents();
@@ -27,16 +27,27 @@ export default function Home() {
   }, []);
 
   // Filtrowanie wydarzeń: jeśli wybrano lokalizację, pokazujemy tylko te eventy, których city_name jest równy wybranemu
-  const filteredEvents = selectedLocation 
-    ? events.filter(event => event.location.city_name === selectedLocation.city_name)
-    : events;
+   // Najpierw filtrujemy wydarzenia według wybranej lokalizacji (jeśli taka jest)
+   const filteredByLocation = selectedLocation 
+   ? events.filter(event => event.location.city_name === selectedLocation.city_name)
+   : events;
+
+ // Następnie filtrujemy wyniki po wpisanym zapytaniu, sprawdzając event.name i event.event_category.name
+ const filteredEvents = filteredByLocation.filter(event => {
+   const lowerQuery = searchQuery.toLowerCase();
+   const nameMatch = event.name.toLowerCase().includes(lowerQuery);
+   const categoryMatch = event.event_category?.name.toLowerCase().includes(lowerQuery);
+   return nameMatch || categoryMatch;
+ });
 
   return (
     <View style={styles.container}>
       <TopBar user={session?.user} events={events} locations={locations} />
 
       <FlatList 
-        ListHeaderComponent={Header}
+         ListHeaderComponent={
+          <Header searchQuery={searchQuery} onSearch={setSearchQuery} />
+        }
         data={filteredEvents} 
         renderItem={({ item }) => <EventCard event={item} user={session?.user} />}
         keyExtractor={(item) => item.id.toString()}
