@@ -37,7 +37,8 @@ export default function Home() {
    const lowerQuery = searchQuery.toLowerCase();
    const nameMatch = event.name.toLowerCase().includes(lowerQuery);
    const categoryMatch = event.event_category?.name.toLowerCase().includes(lowerQuery);
-   return nameMatch || categoryMatch;
+   const descriptionMatch = event.short_description.toLowerCase().includes(lowerQuery);
+   return nameMatch || categoryMatch || descriptionMatch;
  });
 
   return (
