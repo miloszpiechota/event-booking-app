@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, ImageBackground, StyleSheet, Dimensions } from 'react-native';
-import SearchBar from './SearchBar';  // Importowanie SearchBar
-
+import SearchBar from './SearchBar.tsx';  // Importowanie SearchBar
+import FilterIcon from './FilterIcon.tsx';
 // Pobranie szerokości ekranu
 const { width } = Dimensions.get('window');
 
@@ -21,8 +21,10 @@ const Header = () => {
         </View>
 
         {/* Search Bar na dole ImageBackground */}
-        <View style={styles.searchBarContainer}>
-          <SearchBar />  {/* Użycie komponentu SearchBar */}
+         {/* Kontener dla SearchBar oraz FilterIcon */}
+         <View style={styles.searchBarContainer}>
+          <SearchBar />
+          <FilterIcon />
         </View>
       </ImageBackground>
     </View>
@@ -30,15 +32,14 @@ const Header = () => {
 };
 
 export default Header;
-
 const styles = StyleSheet.create({
   container: {
     marginBottom: 20,
     width: width, // Pełna szerokość ekranu
   },
   backgroundImage: {
-    width: width, 
-    height: 190, 
+    width: width,
+    height: 190,
     resizeMode: "cover",
     justifyContent: "center",
     alignItems: "center",
@@ -60,8 +61,17 @@ const styles = StyleSheet.create({
   },
   searchBarContainer: {
     position: "absolute",
-    bottom: 10, // Wystaje poza obrazek
-    width: "95%", // Szerokość paska wyszukiwania
-    alignItems: "center",
+    bottom: 10, // Pasek wyszukiwania wystaje poza obrazek
+    width: "95%",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  searchBarWrapper: {
+    width: "85%", // SearchBar zajmie 85% szerokości kontenera
+  },
+  filterIconWrapper: {
+    width: "15%", // FilterIcon zajmie pozostałe 15%
+    alignItems: 'center',
   },
 });
