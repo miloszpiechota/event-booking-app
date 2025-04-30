@@ -4,10 +4,13 @@ import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 interface StarRatingProps {
   maxStars?: number;
   onRate: (rating: number) => void;
+  initialRating?: number;
 }
 
-const StarRating: React.FC<StarRatingProps> = ({ maxStars = 5, onRate }) => {
-  const [selectedStars, setSelectedStars] = useState(0);
+
+const StarRating: React.FC<StarRatingProps> = ({ maxStars = 5, onRate, initialRating = 0, }) => {
+  const [selectedStars, setSelectedStars] = useState<number>(initialRating || 0);
+
 
   const handlePress = (rating: number) => {
     setSelectedStars(rating);

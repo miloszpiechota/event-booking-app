@@ -70,7 +70,8 @@ const EventDetails = () => {
           ⭐ Average rating:{" "}
           {averageRating ? averageRating.toFixed(1) : "No ratings yet"}
         </Text>
-        <StarRating onRate={handleRate} />
+        <StarRating onRate={handleRate} initialRating={userRating} />
+
       </View>
 
       {/* Mapka */}
