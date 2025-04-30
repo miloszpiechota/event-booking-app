@@ -1,4 +1,4 @@
-import { supabase } from "@/superbase";
+import { supabase } from "../superbaseClient.ts"; // upewnij się, że masz poprawnie skonfigurowany klient Supabase
 
 const fetchEventTickets = async () => {
    

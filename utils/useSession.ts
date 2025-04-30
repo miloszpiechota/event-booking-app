@@ -1,6 +1,6 @@
 // hooks/useSession.ts
 import { useState, useEffect } from 'react';
-import { supabase } from '../superbase';  // Zaktualizuj ścieżkę do pliku z konfiguracją Supabase
+import { supabase } from '../superbaseClient.ts';  // Zaktualizuj ścieżkę do pliku z konfiguracją Supabase
 
 // Custom hook do zarządzania sesją użytkownika
 export const useSession = () => {

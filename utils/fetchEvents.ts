@@ -1,4 +1,4 @@
-import { supabase } from '../superbase.ts';
+import { supabase } from '../superbaseClient.ts';
 
 export const fetchEvents = async () => {
   const { data, error } = await supabase

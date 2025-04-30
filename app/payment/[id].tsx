@@ -1,200 +1,130 @@
-import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { fetchPaymentMethods } from "../../utils/fetchPaymentMethods.ts";
-import { Alert, Keyboard, TouchableWithoutFeedback } from "react-native";
-
 import {
-  
   StyleSheet,
   View,
   Text,
   TextInput,
   TouchableOpacity,
+  Alert,
+  Keyboard,
+  TouchableWithoutFeedback,
+  ActivityIndicator,
 } from "react-native";
+import { useLocalSearchParams } from "expo-router";
 import DropDownPicker from "react-native-dropdown-picker";
-import { supabase } from "../../superbase.ts";
+
+import { fetchPaymentMethods } from "../../utils/fetchPaymentMethods.ts";
+import { handlePayment } from "../../utils/payment.ts";
+import { supabase } from "../../superbaseClient.ts";
 
 const TicketPayment = () => {
   const { eventData } = useLocalSearchParams();
   const [selectedOption, setSelectedOption] = useState("standard");
-  const [ticketQuantity, setTicketQuantity] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [open, setOpen] = useState(false);
-  const [items, setItems] = useState([
-    { label: "Credit Card", value: "credit_card" },
-    { label: "PayPal", value: "paypal" },
-    { label: "Apple Pay", value: "apple_pay" },
-  ]);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [ticketQuantityInput, setTicketQuantityInput] = useState("1");
+
+  const event = eventData ? JSON.parse(eventData as string) : null;
 
   useEffect(() => {
-    const loadPaymentMethods = async () => {
-      const paymentMethods = await fetchPaymentMethods();
-      if (paymentMethods.length > 0) {
+    const loadMethods = async () => {
+      const methods = await fetchPaymentMethods();
+      if (methods?.length) {
         setItems(
-          paymentMethods.map((method: { name: any; id: any; }) => ({
-            label: method.name, // Załóżmy, że kolumna w bazie to "name"
-            value: method.id, // Załóżmy, że kolumna w bazie to "id"
+          methods.map((m) => ({
+            label: m.name,
+            value: m.id,
           }))
         );
       }
     };
-
-    loadPaymentMethods();
+    loadMethods();
   }, []);
 
-  if (!eventData) {
-    return <Text>Event not found</Text>;
-  }
+  const getTotalPrice = () => {
+    const quantity = parseInt(ticketQuantityInput) || 1;
+    const unit =
+      selectedOption === "standard"
+        ? event.event_ticket.ticket_pricing.ticket_price
+        : event.event_ticket.ticket_pricing.vip_price;
 
-  const event = JSON.parse(eventData as string);
+    const fee = event.event_ticket.ticket_pricing.fee || 0;
+    return parseFloat(unit) * quantity + fee;
+  };
+
   const getUserToken = async () => {
     const { data, error } = await supabase.auth.getSession();
-    if (error || !data.session) {
-      console.error("User is not logged in or session is missing", error);
-      return null;
-    }
-    return data.session.access_token; // Zwracamy token JWT użytkownika
-  };
-  
-  const getTotalPrice = () => {
-    const price =
-      selectedOption === "standard"
-        ? event.event_ticket?.ticket_pricing?.ticket_price
-        : event.event_ticket?.ticket_pricing?.vip_price;
-
-    return price
-      ? parseFloat(price) * parseInt(ticketQuantity.toString()) +
-          event.event_ticket?.ticket_pricing?.fee
-      : 0;
+    return data?.session?.access_token || null;
   };
 
   const getUserId = async () => {
     const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) {
-      console.error("User is not logged in", error);
-      return null;
-    }
-    return data.user.id; // Pobieramy ID użytkownika
+    return data?.user?.id || null;
   };
-  
-  const handlePayment = async () => {
+
+  const onSubmit = async () => {
+    if (!paymentMethod) {
+      Alert.alert("Błąd", "Wybierz metodę płatności.");
+      return;
+    }
+    const quantity = parseInt(ticketQuantityInput);
+    if (!quantity || quantity <= 0) {
+      Alert.alert("Błąd", "Podaj prawidłową liczbę biletów.");
+      return;
+    }
+
     try {
-      // 1. Check if payment method is selected
-      if (!paymentMethod) {
-        Alert.alert("Error", "Please select a payment method.");
-        return;
-      }
-  
-      // 2. Get the user's authentication token and ID
+      setLoading(true);
+
       const token = await getUserToken();
       const userId = await getUserId();
-  
+
       if (!token || !userId) {
-        Alert.alert("Error", "User is not authenticated.");
+        Alert.alert("Błąd", "Nie jesteś zalogowany.");
         return;
       }
-  
-      // 3. Prepare the ticket_order object with the required fields
-      const ticket_order = {
-        event_ticket_id: event.event_ticket.id, // Use the event's ticket ID
-        quantity: ticketQuantity, // Number of tickets
-        unit_price:
-          selectedOption === "standard"
-            ? event.event_ticket.ticket_pricing.ticket_price
-            : event.event_ticket.ticket_pricing.vip_price, // Price based on selected option
-        ticket_pricing_id: event.event_ticket.ticket_pricing.id, // ID of the ticket pricing
-        status: "paid", // Payment status
-        created_at: new Date().toISOString(), // Current timestamp for created_at
-      };
-  
-      // 4. Create the request body
-      const requestBody = {
-        user_id: userId, // The user's ID
-        ticket_order: ticket_order, // Ticket order details
-        payment_method_id: paymentMethod, // Payment method ID
-        total_price: getTotalPrice(), // Total price for the order
-        event_ticket_id: event.event_ticket.id, // Event ticket ID (for the order)
-      };
-  
-      // 5. Log the data being sent to the API
-      console.log("🛒 Wysyłane dane do API:", JSON.stringify(requestBody, null, 2));
-  
-      // 6. Call the API to process the payment
-      const response = await fetch(
-        "https://azbpvxuvzjcahzrkwuxk.supabase.co/functions/v1/payment-process",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // Authorization token
-          },
-          body: JSON.stringify(requestBody), // Send the request body to the API
-        }
-      );
-  
-      // 7. Parse the response
-      const data = await response.json().catch(() => null);
-      console.log("📩 Odpowiedź serwera:", data);
-  
-      // 8. Check if the response was successful
-      if (!response.ok || !data) {
-        Alert.alert("Error", "Server error. Please try again.");
-        return;
-      }
-  
-      // 9. If successful, show success message
-      Alert.alert("Success", "Order placed successfully!");
-  
-    } catch (error) {
-      console.error("Payment error:", error);
-      Alert.alert("Error", "Failed to process the payment.");
+
+      const unit_price =
+        selectedOption === "standard"
+          ? event.event_ticket.ticket_pricing.ticket_price
+          : event.event_ticket.ticket_pricing.vip_price;
+
+      await handlePayment({
+        event,
+        ticketCount: quantity,
+
+        ticketType: selectedOption === "standard" ? "Standard" : "VIP",
+        totalPrice: getTotalPrice(),
+        paymentMethod, // ← to jest ID metody płatności (np. 3)
+      });
+
+      Alert.alert("Sukces", "Zamówienie zostało złożone!");
+    } catch (e) {
+      console.error(e);
+      Alert.alert("Błąd", "Wystąpił problem podczas przetwarzania płatności.");
+    } finally {
+      setLoading(false);
     }
   };
-  
-  
-  
-  
+
+  if (!event) return <Text>Brak danych wydarzenia</Text>;
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-    <View style={styles.container}>
-      <View style={styles.info_container}>
-        <Text style={styles.title}>Ticket: {event.event_ticket.name}</Text>
-        <Text style={styles.info}>Category: {event.event_category?.name}</Text>
-        <Text style={styles.info}>
-          Start date:{" "}
-          {new Date(event.start_date).toLocaleString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false,
-          })}
-        </Text>
-        <Text style={styles.info}>
-          Valid until:{" "}
-          {new Date(event.end_date).toLocaleString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false,
-          })}
-        </Text>
-        <View style={styles.separator}></View>
-      </View>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={styles.container}>
+        <Text style={styles.header}>{event.name}</Text>
+        <Text style={styles.sub}>Typ: {event.event_category?.name}</Text>
 
-      <View>
-        <Text style={styles.title}>Select pricing option:</Text>
+        <Text style={styles.label}>Wybierz typ biletu:</Text>
         <View style={styles.segmentedContainer}>
           <TouchableOpacity
             style={[
               styles.segmentButton,
               selectedOption === "standard"
-                ? styles.segmentButtonSelected
-                : styles.segmentButtonUnselected,
+                ? styles.segmentSelected
+                : styles.segmentUnselected,
             ]}
             onPress={() => setSelectedOption("standard")}
           >
@@ -202,8 +132,8 @@ const TicketPayment = () => {
               style={[
                 styles.segmentText,
                 selectedOption === "standard"
-                  ? styles.segmentTextSelected
-                  : styles.segmentTextUnselected,
+                  ? styles.textSelected
+                  : styles.textUnselected,
               ]}
             >
               Standard
@@ -214,8 +144,8 @@ const TicketPayment = () => {
             style={[
               styles.segmentButton,
               selectedOption === "vip"
-                ? styles.segmentButtonSelected
-                : styles.segmentButtonUnselected,
+                ? styles.segmentSelected
+                : styles.segmentUnselected,
             ]}
             onPress={() => setSelectedOption("vip")}
           >
@@ -223,8 +153,8 @@ const TicketPayment = () => {
               style={[
                 styles.segmentText,
                 selectedOption === "vip"
-                  ? styles.segmentTextSelected
-                  : styles.segmentTextUnselected,
+                  ? styles.textSelected
+                  : styles.textUnselected,
               ]}
             >
               VIP
@@ -232,42 +162,34 @@ const TicketPayment = () => {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.info}>
-          Selected: {selectedOption === "standard" ? "Standard" : "VIP"}
-        </Text>
-        <Text style={styles.info}>
-          Price:{" "}
-          {selectedOption === "standard"
-            ? event.event_ticket?.ticket_pricing?.ticket_price
-            : event.event_ticket?.ticket_pricing?.vip_price}
-        </Text>
+        <Text style={styles.label}>Ilość biletów:</Text>
 
-        <Text style={styles.title}>Input quantity:</Text>
-        {/* Input for quantity */}
-        <TextInput
-          style={styles.quantityInput}
-          keyboardType="numeric"
-          value={ticketQuantity === 0 ? "" : ticketQuantity.toString()}
-          onChangeText={(value) => {
-            if (value === "") {
-              setTicketQuantity(0);
-            } else {
-              const newQuantity = parseInt(value, 10);
-              if (!isNaN(newQuantity) && newQuantity > 0) {
-                if (newQuantity <= event.event_ticket.quantity) {
-                  setTicketQuantity(newQuantity);
-                } else {
-                  setTicketQuantity(event.event_ticket.quantity);
-                  Alert.alert("Exceeded ticket limit", `The maximum number of tickets is ${event.event_ticket.quantity}`);
-                }
-              } else {
-                Alert.alert("Invalid ticket quantity", "The number of tickets must be greater than 0.");
-              }
-            }
-          }}
-        />
+        <Text style={styles.label}>Ilość biletów:</Text>
 
-        <Text style={styles.title}>Select payment method:</Text>
+<TextInput
+  style={styles.input}
+  value={ticketQuantityInput}
+  onChangeText={(v) => {
+    const digitsOnly = v.replace(/[^0-9]/g, "");
+    setTicketQuantityInput(digitsOnly);
+  }}
+  onBlur={() => {
+    const parsed = parseInt(ticketQuantityInput);
+    const clamped = Math.max(
+      1,
+      Math.min(event.event_ticket.quantity, parsed || 1)
+    );
+    setTicketQuantityInput(clamped.toString());
+  }}
+  keyboardType="numeric"
+/>
+
+<Text style={styles.ticketsLeftInfo}>
+  Pozostało {event.event_ticket.quantity} biletów
+</Text>
+
+
+        <Text style={styles.label}>Metoda płatności:</Text>
         <DropDownPicker
           open={open}
           value={paymentMethod}
@@ -276,136 +198,183 @@ const TicketPayment = () => {
           setValue={setPaymentMethod}
           setItems={setItems}
           style={styles.dropdown}
-          dropDownContainerStyle={styles.dropdownContainer}
-          placeholder="Select a payment method"
+          placeholder="Wybierz metodę"
         />
-      </View>
 
-      <View style={styles.separator} />
-      <View style={styles.totalContainer}>
-        <Text style={styles.totalText}>Fee:</Text>
-        <Text style={styles.totalText}>
-          {event.event_ticket?.ticket_pricing?.fee}
-        </Text>
-      </View>
-      <View style={styles.totalContainer}>
-        <Text style={styles.totalText}>Total price:</Text>
-        <Text style={styles.totalAmount}>${getTotalPrice().toFixed(2)}</Text>
-      </View>
+        <View style={styles.summary}>
+          <Text style={styles.summaryTitle}>Podsumowanie</Text>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Typ biletu:</Text>
+            <Text style={styles.summaryValue}>
+              {selectedOption === "standard" ? "Standard" : "VIP"}
+            </Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Ilość:</Text>
+            <Text style={styles.summaryValue}>
+              {ticketQuantityInput || "1"}
+            </Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Cena łącznie:</Text>
+            <Text style={styles.summaryValue}>
+              {getTotalPrice().toFixed(2)} zł
+            </Text>
+          </View>
+        </View>
 
-      <TouchableOpacity style={styles.paymentButton} onPress={handlePayment}>
-  <Text style={styles.paymentButtonText}>Confirm Payment</Text>
-</TouchableOpacity>
-
-    </View>
+        <TouchableOpacity
+          style={styles.ctaButton}
+          onPress={onSubmit}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.ctaButtonText}>Zatwierdź płatność</Text>
+          )}
+        </TouchableOpacity>
+      </View>
     </TouchableWithoutFeedback>
   );
 };
 
+export default TicketPayment;
+
 const styles = StyleSheet.create({
-  paymentButton: {
+  container: { flex: 1, padding: 20, backgroundColor: "#fff" },
+  header: { fontSize: 24, fontWeight: "bold", marginBottom: 10 },
+  sub: { fontSize: 16, color: "#555" },
+  label: { marginTop: 20, fontWeight: "600", fontSize: 16 },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 10,
+    padding: 10,
+    marginTop: 10,
+  },
+  dropdown: {
+    marginTop: 10,
+    zIndex: 1000,
+  },
+  segmentedContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 10,
+    gap: 12, // jeśli gap nie działa w twojej wersji RN, użyj marginRight w jednym przycisku
+  },
+  
+  segmentButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+    borderWidth: 2,
+  },
+  
+  segmentSelected: {
+    backgroundColor: "#001F4D",
+    borderColor: "#001F4D",
+  },
+  
+  segmentUnselected: {
+    backgroundColor: "transparent",
+    borderColor: "#001F4D",
+  },
+  
+  segmentText: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  
+  textSelected: {
+    color: "#fff",
+  },
+  
+  textUnselected: {
+    color: "#001F4D",
+  },
+  
+
+  summary: {
+    marginTop: 30,
+    padding: 16,
+    backgroundColor: "#f5f5f5", // jasne tło jak na zdjęciu
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  
+  summaryTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 12,
+    color: "#001F4D", // granatowy jak w przyciskach
+  },
+  
+  summaryRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 8,
+  },
+  
+  summaryLabel: {
+    fontWeight: "500",
+    color: "#333",
+    fontSize: 15,
+    flex: 1,
+  },
+  
+  summaryValue: {
+    fontWeight: "600",
+    color: "#001F4D",
+    fontSize: 15,
+    flex: 2,
+  },
+  
+  emoji: {
+    fontSize: 16,
+    marginRight: 6,
+  },
+  
+  ctaButton: {
+    marginTop: 30,
+    backgroundColor: "#001F4D", // głęboki granat
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  
+  ctaButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    letterSpacing: 0.5,
+  },
+  ticketsLeftInfo: {
+    fontSize: 14,
+    color: "#555",
+    marginTop: 6,
+    marginBottom: 10,
+  },
+  
+  
+
+  button: {
+    marginTop: 30,
     backgroundColor: "#007AFF",
     padding: 15,
     borderRadius: 8,
     alignItems: "center",
-    marginTop: 20,
   },
-  paymentButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#fff",
-  },
-  info_container: {
-    width: "100%",
-    padding: 15,
-    marginVertical: 10,
-    backgroundColor: "#f9f9f9",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    alignItems: "center",
-  },
-  title: { fontSize: 22, fontWeight: "bold", marginTop: 10 },
-  info: { fontSize: 16, color: "#333", marginTop: 15 },
-  segmentedContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 10,
-  },
-  segmentButton: {
-    flex: 1,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#333",
-    alignItems: "center",
-  },
-  segmentButtonSelected: {
-    backgroundColor: "#333",
-  },
-  segmentButtonUnselected: {
-    backgroundColor: "white",
-  },
-  segmentText: {
-    fontSize: 16,
-  },
-  segmentTextSelected: {
-    color: "white",
-  },
-  segmentTextUnselected: {
-    color: "black",
-  },
-  separator: {
-    height: 1,
-    backgroundColor: "black",
-
-    marginTop:30
-  },
-  quantityInput: {
-    width: "100%",
-    height: 40,
-    marginVertical: 10,
-    paddingLeft: 10,
-    borderColor: "#ddd",
-    borderWidth: 1,
-    borderRadius: 10,
-    fontSize: 16,
-  },
-  dropdown: {
-    backgroundColor: "#f9f9f9",
-    borderColor: "#ddd",
-    borderRadius: 10,
-    marginTop: 10,
-    width: "100%",
-    height: 40,
-  },
-  dropdownContainer: {
-    backgroundColor: "#fff",
-    borderColor: "#ddd",
-    borderRadius: 10,
-    
-  },
-  totalContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 20,
-    
-  },
-  totalText: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#333",
-  },
-  totalAmount: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#4a79d9",
-  },
+  buttonText: { color: "white", fontWeight: "bold", fontSize: 16 },
 });
-
-export default TicketPayment;

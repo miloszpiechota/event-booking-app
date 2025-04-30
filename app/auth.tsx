@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
-import { supabase } from '../superbase.ts';
+import { supabase } from '../superbaseClient.ts';
 import { Button, Input } from '@rneui/themed';
 import { useRouter } from 'expo-router';
 

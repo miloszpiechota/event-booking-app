@@ -1,4 +1,4 @@
-import { supabase } from '../superbase.ts'; 
+import { supabase } from '../superbaseClient.ts'; 
 import React from 'react'
 
 export const fetchEventCategory = async () => {

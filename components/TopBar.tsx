@@ -55,6 +55,7 @@ const styles = StyleSheet.create({
     padding: 15, // Dodajemy trochę przestrzeni wewnętrznej
     backgroundColor: "#050915", // Kolor tła TopBar
     alignItems: "center", // Centrujemy elementy w pionie
+    marginTop:40
   },
   title: {
     fontSize: Math.min(16, width * 0.04), // Rozmiar czcionki zależny od szerokości ekranu

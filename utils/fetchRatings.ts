@@ -1,4 +1,4 @@
-import { supabase } from "@/superbase";
+import { supabase } from "../superbaseClient.ts";
 
 
  export const fetchRatings = async (id: any) => {

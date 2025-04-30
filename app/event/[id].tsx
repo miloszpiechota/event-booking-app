@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import EventMap from "../../components/EventMap.tsx";
 import StarRating from "../../components/StarRating.tsx";
-import { supabase } from "../../superbase.ts";
+import { supabase } from "../../superbaseClient.ts";
 import { createRating } from "../../utils/createRatings.ts";
 const EventDetails = () => {
   const router = useRouter();
@@ -84,18 +84,25 @@ const EventDetails = () => {
       )}
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[styles.button, styles.signUpButton]}
-          onPress={() =>
-            router.push({
-              pathname: "/payment/[id]",
-              params: { id: event.id.toString(), eventData: JSON.stringify(event) },
-            })
-          }
-          
-        >
-          <Text style={styles.buttonText}>Book Ticket</Text>
-        </TouchableOpacity>
+      <TouchableOpacity
+  style={[
+    styles.button,
+    styles.signUpButton,
+    event.event_ticket.quantity === 0 && styles.disabledButton,
+  ]}
+  disabled={event.event_ticket.quantity === 0}
+  onPress={() =>
+    router.push({
+      pathname: "/payment/[id]",
+      params: { id: event.id.toString(), eventData: JSON.stringify(event) },
+    })
+  }
+>
+  <Text style={styles.buttonText}>
+    {event.event_ticket.quantity === 0 ? "Bilety wyprzedane" : "Book Ticket"}
+  </Text>
+</TouchableOpacity>
+
       </View>
     </ScrollView>
   );
@@ -167,6 +174,10 @@ const styles = StyleSheet.create({
     fontSize: 16, // Rozmiar czcionki
     fontWeight: "bold", // Pogrubienie tekstu
   },
+  disabledButton: {
+    backgroundColor: "#ccc", // Jasny szary kolor przycisku
+  },
+  
 });
 
 export default EventDetails;

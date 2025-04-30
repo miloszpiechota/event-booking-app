@@ -10,7 +10,7 @@ export default function TabLayout() {
       <Tabs.Screen 
         name="home" 
         options={{ 
-          title: "Home", 
+          headerShown: false, // Ukrywa nagłówek w zakładce
           tabBarIcon: ({ color, size }) => <FontAwesome name="home" size={24} color="black" />
         }} 
       />

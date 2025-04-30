@@ -1,7 +1,7 @@
-// components/EventCard.tsx
-import React from "react";
-import { View, Text, StyleSheet, Image, Button, TouchableOpacity } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
+import { fetchRatings } from "../utils/fetchRatings.ts";
 
 interface Event {
   id: string;
@@ -24,141 +24,183 @@ interface Event {
 
 interface EventCardProps {
   event: Event;
-  user?: { email: string | undefined } | null; // Dodajemy user jako prop
+  user?: { email: string | undefined } | null;
+  
 }
 
-const EventCard: React.FC<EventCardProps> = ({ event, user }) => {
+const EventCard: React.FC<EventCardProps> = ({ event, user}) => {
   const router = useRouter();
+  const [expanded, setExpanded] = useState(false);
+  const maxDescriptionLength = 120;
+  const [averageRating, setAverageRating] = useState<number | null>(null);
+
+  useEffect(() => {
+      const loadRating = async () => {
+        const ratings: { rating: number }[] = await fetchRatings(event.id);
+        if (ratings.length > 0) {
+          setAverageRating(
+            ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
+          );
+        }
+      };
+      loadRating();
+    }, []);
+  const toggleExpanded = () => setExpanded(!expanded);
+  const truncatedDescription =
+    event.short_description.length > maxDescriptionLength
+      ? event.short_description.substring(0, maxDescriptionLength) + "..."
+      : event.short_description;
+
+  // 🔢 Funkcja obliczająca czas trwania wydarzenia
+  const calculateEventDuration = (start: string, end?: string) => {
+    if (!end) return "Ongoing"; // Jeśli brak daty zakończenia
+
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const durationInMs = endDate.getTime() - startDate.getTime();
+    const durationInDays = durationInMs / (1000 * 60 * 60 * 24);
+
+    return durationInDays === 1 ? "1 day" : `${Math.round(durationInDays)} days`;
+  };
 
   return (
     <View style={styles.card}>
-      {/* Obrazek */}
-      {event.image_url && (
-        <Image source={{ uri: event.image_url }} style={styles.image} />
+      {event.image_url && <Image source={{ uri: event.image_url }} style={styles.image} />}
+      
+       {/* Nazwa wydarzenia + ocena */}
+       <View style={styles.headerRow}>
+        <Text style={styles.name}>{event.name ?? "None"}</Text>
+        <Text style={styles.rating}>
+          ⭐ {averageRating ? averageRating.toFixed(1) : "No ratings yet"}
+        </Text>
+      </View>
+      <Text style={styles.category}>{event.event_category?.name} Category</Text>
+
+      <Text style={styles.description}>
+        {expanded ? event.short_description : truncatedDescription}
+      </Text>
+      {event.short_description.length > maxDescriptionLength && (
+        <TouchableOpacity onPress={toggleExpanded}>
+          <Text style={styles.showMore}>{expanded ? "Show less" : "Show more"}</Text>
+        </TouchableOpacity>
       )}
 
-      {/* Treść wydarzenia */}
-      <Text style={styles.name}>{event.name ?? "None"}</Text>
-      <Text style={styles.name}>{event.event_category?.name}</Text>
-      <Text style={styles.description}>
-        {event.short_description ?? "None"}
-      </Text>
-
-      {/* Informacje o dacie i lokalizacji */}
+      {/* 📅 Data + czas trwania */}
       <View style={styles.infoContainer}>
-        <Text>
+        <Text style={styles.infoText}>
           📅 {new Date(event.start_date).toLocaleDateString()} -{" "}
-          {event.end_date
-            ? new Date(event.end_date).toLocaleDateString()
-            : "None"}
+          {event.end_date ? new Date(event.end_date).toLocaleDateString() : "No end date"}
         </Text>
-        <Text>
-          📍 {event.location?.street_name} {event.location?.apartment_number},
+        <Text style={styles.infoText}>
+          ⏳ Duration: {calculateEventDuration(event.start_date, event.end_date)}
+        </Text>
+        <Text style={styles.infoText}>
+          📍 {event.location?.street_name} {event.location?.apartment_number},{" "}
           {event.location?.city_name} {event.location?.zip_code},{" "}
           {event.location?.country_name}
         </Text>
       </View>
 
-      {/* Pokazanie danych użytkownika (jeśli istnieją) */}
-      {user && (
-        <View style={styles.userInfo}>
-          <Text>User Email: {user.email}</Text>
-        </View>
-      )}
-
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[styles.button, styles.signUpButton]}
-          onPress={() =>
-            router.push({
-              pathname: `/event/${event.id}`,
-              params: {
-                eventData: JSON.stringify(event),
-                userData: JSON.stringify(user),
-              },
-            })
-          }
-        >
-          <Text style={styles.buttonText}>Show Details</Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() =>
+          router.push({
+            pathname: `/event/${event.id}`,
+            params: {
+              eventData: JSON.stringify(event),
+              userData: JSON.stringify(user),
+            },
+          })
+        }
+      >
+        <Text style={styles.buttonText}>Show Details</Text>
+      </TouchableOpacity>
     </View>
   );
 };
 
+// 🎨 Style
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#fff",
-    padding: 15,
-    marginVertical: 10,
-    borderRadius: 10,
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    padding: 18,
+    marginVertical: 12,
+    borderRadius: 15,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 5,
+    elevation: 4,
     width: "93%",
     alignSelf: "center",
   },
   image: {
     width: "100%",
-    height: 150,
-    borderRadius: 10,
-    marginBottom: 10,
+    height: 170,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   name: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
-    color: "#333",
-    marginBottom: 5,
+    color: "#222",
+  },
+  rating: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#FFB400",
+  },
+  category: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#0066CC",
+    marginBottom: 8,
   },
   description: {
     fontSize: 14,
-    color: "#555",
+    color: "#444",
     marginBottom: 5,
+    lineHeight: 20,
+  },
+  showMore: {
+    fontSize: 14,
+    color: "black",
+    fontWeight: "bold",
+    marginBottom: 10,
+    alignSelf: "center",
   },
   infoContainer: {
-    flexDirection: "column",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginTop: 10,
-  },
-  userInfo: {
-    marginTop: 10,
+    backgroundColor: "#f6f6f6",
     padding: 10,
-    backgroundColor: "#f3f3f3",
-    borderRadius: 5,
+    borderRadius: 8,
+    marginVertical: 8,
   },
-  area: {
-    padding: 15,
-    borderRadius: 10,
-    width: "100%",
-    marginVertical: 10,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    borderColor: "black",
-    borderWidth: 1,
-  },
-  
-  buttonContainer: {
-    marginVertical: 10,
-    width: '100%',
-    alignItems: 'center',
+  infoText: {
+    fontSize: 14,
+    color: "#333",
+    marginBottom: 4,
+    fontWeight: "bold",
   },
   button: {
-    padding: 15,
+    backgroundColor: "#011C40",
+    paddingVertical: 12,
     borderRadius: 10,
-    width: '100%',
-    backgroundColor: '#011C40',  // Tło przycisku
-    alignItems: 'center',
-  },
-  signUpButton: {
-    backgroundColor: '#011C40', // Tło dla przycisku
+    alignItems: "center",
+    marginTop: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
   },
   buttonText: {
-    color: '#fff',  // Zmieniamy kolor tekstu na biały
-    fontSize: 16,  // Rozmiar czcionki
-    fontWeight: 'bold',  // Pogrubienie tekstu
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 

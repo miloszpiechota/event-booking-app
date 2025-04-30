@@ -4,7 +4,7 @@
 node_modules/
 # Environment variables
 .env
-superbase.ts
+
 expo-env.d.ts
 supabase/functions/
 supabase/node_modules/
