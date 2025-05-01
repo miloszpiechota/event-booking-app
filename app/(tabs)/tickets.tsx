@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { fetchOrders } from "../../utils/fetchOrders.ts";
+import { fetchEventByTicketId } from "../../utils/fetchEventByTicketId.ts";
 import OrderTicketCard from "../../components/OrderTicketCard.tsx";
 
 export default function TicketsScreen() {
@@ -17,16 +18,24 @@ export default function TicketsScreen() {
     const fetchData = async () => {
       const orders = await fetchOrders();
 
-      // order_ticket to obiekt, nie tablica!
-      const allTickets = orders
-        .filter((order) => order.order_ticket) // upewnij się, że istnieje
-        .map((order) => ({
-          ...order.order_ticket,
-          userId: order.user_id,
-          orderId: order.id,
-        }));
+      const enrichedTickets = await Promise.all(
+        orders
+          .filter((order) => order.order_ticket && order.order_ticket.event_ticket)
+          .map(async (order) => {
+            const event = await fetchEventByTicketId(
+              order.order_ticket.event_ticket.id
+            );
 
-      setTickets(allTickets);
+            return {
+              ...order.order_ticket,
+              userId: order.user_id,
+              orderId: order.id,
+              event,
+            };
+          })
+      );
+
+      setTickets(enrichedTickets);
       setLoading(false);
     };
 
@@ -44,7 +53,7 @@ export default function TicketsScreen() {
           data={tickets}
           keyExtractor={(item) => `${item.orderId}-${item.id}`}
           renderItem={({ item }) => (
-            <OrderTicketCard ticket={item} userId={item.userId} />
+            <OrderTicketCard ticket={item} userId={item.userId} event={item.event} />
           )}
           contentContainerStyle={{ paddingBottom: 40 }}
         />
