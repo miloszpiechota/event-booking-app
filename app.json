@@ -8,6 +8,8 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "permissions": ["CAMERA"],
+
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",

@@ -1,4 +1,5 @@
 import React from 'react';
+import 'react-native-url-polyfill/auto';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 

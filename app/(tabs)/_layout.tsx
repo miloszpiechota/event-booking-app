@@ -28,6 +28,14 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => <Foundation name="ticket" size={24} color="black" /> 
         }} 
       />
+       <Tabs.Screen 
+        name="scanner" 
+        options={{ 
+          title: "Scanner",
+          tabBarIcon: ({ color, size }) => <Ionicons name="scan" size={24} color="black" /> 
+          
+        }} 
+      />
       
     </Tabs>
     
