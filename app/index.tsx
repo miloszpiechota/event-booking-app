@@ -13,7 +13,7 @@ export default function Welcome() {
       <Image source={require("../assets/images/pl.jpg")} style={styles.bannerImage} />
       <Text style={styles.title}>Event Booking App</Text>
       <Text style={styles.subTitle}>
-        Event Booking App to idealne narzędzie dla wszystkich, którzy chcą być na bieżąco z lokalnymi wydarzeniami.
+      Event Booking App is the perfect tool for anyone who wants to stay up to date with local events.
       </Text>
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={[styles.button, { backgroundColor: '#011C40' }]} onPress={() => router.push('/auth')}>

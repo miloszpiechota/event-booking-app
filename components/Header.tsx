@@ -13,7 +13,7 @@ const Header = ({ searchQuery, onSearch }: HeaderProps) => {
     <View style={styles.container}>
       <ImageBackground
         style={styles.backgroundImage}
-        source={require("../assets/images/backgroundImage.jpg")}
+        source={require("../assets/images/background3.webp")}
       >
         {/* Overlay dla lepszej czytelności */}
         <View style={styles.overlay} />

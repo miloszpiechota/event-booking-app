@@ -24,38 +24,38 @@ const QrScanner = () => {
     setScanned(true);
 
     try {
-      console.log("📦 Otrzymany QR data:", data);
+      console.log("📦 Received QR data:", data);
 
       const token = data.includes("token=") ? data.split("token=")[1] : data;
-      console.log("🔑 Wyodrębniony token:", token);
+      console.log("🔑 Extracted token:", token);
 
       if (!token) {
-        Alert.alert("Błąd", "Nie można odczytać tokena z kodu QR.");
+        Alert.alert("Error", "Cannot read token from QR code.");
         return;
       }
 
       let decoded: string;
       try {
         decoded = Buffer.from(token, "base64").toString("utf-8");
-        console.log("📜 Zdekodowany payload JSON:", decoded);
+        console.log("📜 Decoded payload JSON:", decoded);
       } catch {
-        Alert.alert("Błąd", "Token nie jest prawidłowym ciągiem base64.");
+        Alert.alert("Error", "Token is not valid base64.");
         return;
       }
 
       let payload: any;
       try {
         payload = JSON.parse(decoded);
-        console.log("📦 Rozkodowany payload obiekt:", payload);
+        console.log("📦 Parsed payload object:", payload);
       } catch {
-        Alert.alert("Błąd", "Nie można sparsować danych z tokena.");
+        Alert.alert("Error", "Could not parse token data.");
         return;
       }
 
       const { ticketName, eventName, issuedAt, checksum } = payload;
 
       if (!ticketName || !eventName || !issuedAt || !checksum) {
-        Alert.alert("Błąd", "Brakuje danych w QR.");
+        Alert.alert("Error", "QR code is missing required fields.");
         return;
       }
 
@@ -65,113 +65,100 @@ const QrScanner = () => {
         raw + secretKey
       );
 
-      console.log("🔐 Oczekiwany checksum:", expectedChecksum);
-      console.log("🧾 Otrzymany checksum:", checksum);
+      console.log("🔐 Expected checksum:", expectedChecksum);
+      console.log("🧾 Provided checksum:", checksum);
 
       if (expectedChecksum !== checksum) {
-        Alert.alert(
-          "Błąd",
-          "Kod QR został zmodyfikowany lub jest nieprawidłowy."
-        );
+        Alert.alert("Error", "QR code has been tampered with or is invalid.");
         return;
       }
 
-      // 🔍 SZUKANIE BILETU W BAZIE
-      console.log("🔍 Szukam biletu z qr_code:", token);
+      // 🔍 Look up ticket in DB
+      console.log("🔍 Looking for ticket with qr_code:", token);
 
-      const { data: rawTickets, error } = await supabase.from("order_ticket")
+      const { data: rawTickets, error } = await supabase
+        .from("order_ticket")
         .select(`
-    id,
-    status,
-    quantity,
-    unit_price,
-    event_ticket: event_ticket_id (
-      id,
-      name,
-      qr_code
-    )
-  `);
+          id,
+          status,
+          quantity,
+          unit_price,
+          event_ticket: event_ticket_id (
+            id,
+            name,
+            qr_code
+          )
+        `);
 
       if (error) {
-        console.error("❌ Błąd zapytania Supabase:", error);
-        Alert.alert("Błąd", "Nie udało się pobrać danych z bazy.");
+        console.error("❌ Supabase query error:", error);
+        Alert.alert("Error", "Failed to fetch data from database.");
         return;
       }
 
-      // 🔍 Ręczne filtrowanie tylko tych, które mają event_ticket i pasujący qr_code
       const matchingTickets = rawTickets.filter(
         (t) => t.event_ticket?.qr_code === token
       );
 
-      console.log("🔍 Dopasowane bilety:", matchingTickets);
+      console.log("🔍 Matching tickets:", matchingTickets);
 
       if (matchingTickets.length === 0) {
-        Alert.alert("Nie znaleziono", "Bilet nie istnieje w bazie.");
+        Alert.alert("Not Found", "Ticket does not exist in the database.");
         return;
       }
 
       if (matchingTickets.length > 1) {
-        console.warn(
-          "⚠️ Znaleziono wiele biletów z tym samym QR:",
-          matchingTickets
-        );
-        Alert.alert("Błąd", "Znaleziono wiele biletów z tym samym kodem QR.");
+        console.warn("⚠️ Multiple tickets found with same QR:", matchingTickets);
+        Alert.alert("Error", "Multiple tickets found with the same QR code.");
         return;
       }
 
       const ticket = matchingTickets[0];
 
-      if (error) {
-        console.error("❌ Błąd zapytania Supabase:", error);
-        Alert.alert("Błąd", "Nie udało się pobrać danych z bazy.");
-        return;
-      }
-
       if (!ticket) {
-        Alert.alert("Nie znaleziono", "Bilet nie istnieje w bazie.");
+        Alert.alert("Not Found", "Ticket does not exist in the database.");
         return;
       }
 
       if (ticket.status !== "paid") {
-        Alert.alert("Bilet nieważny", "Ten bilet został już wykorzystany.");
+        Alert.alert("Invalid Ticket", "This ticket has already been used.");
         return;
       }
 
       setTicketInfo(ticket);
     } catch (err) {
-      console.error("❌ Błąd parsowania QR:", err);
-      Alert.alert("Błąd", "Nie można odczytać danych z kodu.");
+      console.error("❌ QR parsing error:", err);
+      Alert.alert("Error", "Could not read data from QR code.");
     }
   };
 
   const handleAuthorizeAccess = async () => {
     if (!ticketInfo) return;
-  
-    console.log("🛠️ Próbuję zaktualizować ticket o ID:", ticketInfo.id);
-  
+
+    console.log("🛠️ Attempting to update ticket with ID:", ticketInfo.id);
+
     const { data, error } = await supabase
       .from("order_ticket")
       .update({ status: "checked_in" })
       .eq("id", ticketInfo.id)
-      .select(); // Dodajemy, by zobaczyć co Supabase faktycznie zwraca
-  
-    console.log("📥 Wynik update:", data);
-  
+      .select();
+
+    console.log("📥 Update result:", data);
+
     if (error) {
-      console.error("❌ Błąd update Supabase:", error);
-      Alert.alert("Błąd", "Nie udało się zaktualizować statusu biletu.");
+      console.error("❌ Supabase update error:", error);
+      Alert.alert("Error", "Failed to update ticket status.");
     } else if (!data || data.length === 0) {
-      Alert.alert("Błąd", "Nie znaleziono rekordu do aktualizacji.");
+      Alert.alert("Error", "Ticket record not found for update.");
     } else {
-      Alert.alert("Sukces", "Bilet został upoważniony i skasowany.");
+      Alert.alert("Success", "Ticket has been authorized and checked in.");
       setTicketInfo(null);
       setScanned(false);
     }
   };
-  
 
-  if (hasPermission === null) return <Text>Proszę o dostęp do kamery...</Text>;
-  if (hasPermission === false) return <Text>Brak dostępu do kamery</Text>;
+  if (hasPermission === null) return <Text>Requesting camera access...</Text>;
+  if (hasPermission === false) return <Text>No camera access</Text>;
 
   return (
     <View style={styles.container}>
@@ -183,17 +170,17 @@ const QrScanner = () => {
 
       {ticketInfo && (
         <View style={styles.ticketBox}>
-          <Text style={styles.header}>✅ Bilet znaleziony</Text>
-          <Text>ID biletu: {ticketInfo.id}</Text>
-          <Text>Ilość: {ticketInfo.quantity}</Text>
-          <Text>Cena jednostkowa: {ticketInfo.unit_price} zł</Text>
-          <Text>Nazwa: {ticketInfo.event_ticket?.name}</Text>
+          <Text style={styles.header}>✅ Ticket Found</Text>
+          <Text>Ticket ID: {ticketInfo.id}</Text>
+          <Text>Quantity: {ticketInfo.quantity}</Text>
+          <Text>Unit Price: {ticketInfo.unit_price} zł</Text>
+          <Text>Name: {ticketInfo.event_ticket?.name}</Text>
 
           <TouchableOpacity
             style={styles.button}
             onPress={handleAuthorizeAccess}
           >
-            <Text style={styles.buttonText}>Upoważnij dostęp</Text>
+            <Text style={styles.buttonText}>Authorize Entry</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -203,7 +190,7 @@ const QrScanner = () => {
           style={styles.button}
           onPress={() => setScanned(false)}
         >
-          <Text style={styles.buttonText}>Skanuj ponownie</Text>
+          <Text style={styles.buttonText}>Scan Again</Text>
         </TouchableOpacity>
       )}
     </View>

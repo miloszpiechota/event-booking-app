@@ -30,6 +30,7 @@ export default function TicketsScreen() {
               ...order.order_ticket,
               userId: order.user_id,
               orderId: order.id,
+              qr_code: order.order_ticket.event_ticket.qr_code,
               event,
             };
           })

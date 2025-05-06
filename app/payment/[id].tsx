@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { useRouter } from "expo-router";
+
 import {
   StyleSheet,
   View,
@@ -25,6 +27,8 @@ const TicketPayment = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [ticketQuantityInput, setTicketQuantityInput] = useState("1");
+  const router = useRouter();
+
 
   const event = eventData ? JSON.parse(eventData as string) : null;
 
@@ -55,23 +59,23 @@ const TicketPayment = () => {
   };
 
   const getUserToken = async () => {
-    const { data, error } = await supabase.auth.getSession();
+    const { data } = await supabase.auth.getSession();
     return data?.session?.access_token || null;
   };
 
   const getUserId = async () => {
-    const { data, error } = await supabase.auth.getUser();
+    const { data } = await supabase.auth.getUser();
     return data?.user?.id || null;
   };
 
   const onSubmit = async () => {
     if (!paymentMethod) {
-      Alert.alert("Błąd", "Wybierz metodę płatności.");
+      Alert.alert("Error", "Please select a payment method.");
       return;
     }
     const quantity = parseInt(ticketQuantityInput);
     if (!quantity || quantity <= 0) {
-      Alert.alert("Błąd", "Podaj prawidłową liczbę biletów.");
+      Alert.alert("Error", "Enter a valid number of tickets.");
       return;
     }
 
@@ -82,7 +86,7 @@ const TicketPayment = () => {
       const userId = await getUserId();
 
       if (!token || !userId) {
-        Alert.alert("Błąd", "Nie jesteś zalogowany.");
+        Alert.alert("Error", "You are not logged in.");
         return;
       }
 
@@ -94,30 +98,30 @@ const TicketPayment = () => {
       await handlePayment({
         event,
         ticketCount: quantity,
-
         ticketType: selectedOption === "standard" ? "Standard" : "VIP",
         totalPrice: getTotalPrice(),
-        paymentMethod, // ← to jest ID metody płatności (np. 3)
+        paymentMethod,
       });
 
-      Alert.alert("Sukces", "Zamówienie zostało złożone!");
+      Alert.alert("Success", "Your order has been placed!");
+      router.replace("/tickets");
     } catch (e) {
       console.error(e);
-      Alert.alert("Błąd", "Wystąpił problem podczas przetwarzania płatności.");
+      Alert.alert("Error", "There was a problem processing your payment.");
     } finally {
       setLoading(false);
     }
   };
 
-  if (!event) return <Text>Brak danych wydarzenia</Text>;
+  if (!event) return <Text>No event data found.</Text>;
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
         <Text style={styles.header}>{event.name}</Text>
-        <Text style={styles.sub}>Typ: {event.event_category?.name}</Text>
+        <Text style={styles.sub}>Category: {event.event_category?.name}</Text>
 
-        <Text style={styles.label}>Wybierz typ biletu:</Text>
+        <Text style={styles.label}>Select ticket type:</Text>
         <View style={styles.segmentedContainer}>
           <TouchableOpacity
             style={[
@@ -162,34 +166,30 @@ const TicketPayment = () => {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.label}>Ilość biletów:</Text>
+        <Text style={styles.label}>Ticket quantity:</Text>
+        <TextInput
+          style={styles.input}
+          value={ticketQuantityInput}
+          onChangeText={(v) => {
+            const digitsOnly = v.replace(/[^0-9]/g, "");
+            setTicketQuantityInput(digitsOnly);
+          }}
+          onBlur={() => {
+            const parsed = parseInt(ticketQuantityInput);
+            const clamped = Math.max(
+              1,
+              Math.min(event.event_ticket.quantity, parsed || 1)
+            );
+            setTicketQuantityInput(clamped.toString());
+          }}
+          keyboardType="numeric"
+        />
 
-        <Text style={styles.label}>Ilość biletów:</Text>
+        <Text style={styles.ticketsLeftInfo}>
+          {event.event_ticket.quantity} tickets left
+        </Text>
 
-<TextInput
-  style={styles.input}
-  value={ticketQuantityInput}
-  onChangeText={(v) => {
-    const digitsOnly = v.replace(/[^0-9]/g, "");
-    setTicketQuantityInput(digitsOnly);
-  }}
-  onBlur={() => {
-    const parsed = parseInt(ticketQuantityInput);
-    const clamped = Math.max(
-      1,
-      Math.min(event.event_ticket.quantity, parsed || 1)
-    );
-    setTicketQuantityInput(clamped.toString());
-  }}
-  keyboardType="numeric"
-/>
-
-<Text style={styles.ticketsLeftInfo}>
-  Pozostało {event.event_ticket.quantity} biletów
-</Text>
-
-
-        <Text style={styles.label}>Metoda płatności:</Text>
+        <Text style={styles.label}>Payment method:</Text>
         <DropDownPicker
           open={open}
           value={paymentMethod}
@@ -198,25 +198,25 @@ const TicketPayment = () => {
           setValue={setPaymentMethod}
           setItems={setItems}
           style={styles.dropdown}
-          placeholder="Wybierz metodę"
+          placeholder="Select payment method"
         />
 
         <View style={styles.summary}>
-          <Text style={styles.summaryTitle}>Podsumowanie</Text>
+          <Text style={styles.summaryTitle}>Summary</Text>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Typ biletu:</Text>
+            <Text style={styles.summaryLabel}>Ticket type:</Text>
             <Text style={styles.summaryValue}>
               {selectedOption === "standard" ? "Standard" : "VIP"}
             </Text>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Ilość:</Text>
+            <Text style={styles.summaryLabel}>Quantity:</Text>
             <Text style={styles.summaryValue}>
               {ticketQuantityInput || "1"}
             </Text>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Cena łącznie:</Text>
+            <Text style={styles.summaryLabel}>Total price:</Text>
             <Text style={styles.summaryValue}>
               {getTotalPrice().toFixed(2)} zł
             </Text>
@@ -231,7 +231,7 @@ const TicketPayment = () => {
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.ctaButtonText}>Zatwierdź płatność</Text>
+            <Text style={styles.ctaButtonText}>Confirm Payment</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -240,6 +240,7 @@ const TicketPayment = () => {
 };
 
 export default TicketPayment;
+
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: "#fff" },
