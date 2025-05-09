@@ -18,7 +18,14 @@
 Event Booking Mobile App is a continuation of the [Event Booking Web App](#modules), designed to extend its core functionality to mobile devices. While maintaining access to the event catalog and user tickets, the app introduces two key features: the ability to submit star ratings for attended events and the capability to securely scan and validate QR-coded tickets using the device camera. It integrates seamlessly with Supabase for real-time database updates and ensures smooth event check-in and feedback collection on the go.
 
 ---
+## 📽️ Demo Videos
 
+- 🎫 [Buy Ticket | Web App](https://youtu.be/vfbKGoMXNcg)
+- ✏️ [Create New Event | Web App](https://youtu.be/vfbKGoMXNcg)
+- 📱 [Buy Ticket | Mobile App (Short)](https://youtube.com/shorts/qJOOIpKZPZE)
+- 📸 [Scan your Ticket using Mobile QR Code Scanner| Mobile App (Short)](https://youtube.com/shorts/9dW6a8WAZ9s)
+---
+## 
 ## 🚀 Key Features
 
 * QR code scanning for ticket check-in using Expo Camera
@@ -87,3 +94,13 @@ npx expo start
 ```
 
 > 📱 Requires camera permission. Make sure to configure `QR_SECRET_KEY` in Expo constants.
+
+
+---
+## 🖼️ Screenshots
+
+| Home                       | Map & Rating Module                        | Ticket Details                      |
+| ---------------------------------------- | ----------------------------------- | ----------------------------------- |
+| ![Scanner](https://github.com/user-attachments/assets/53fba2da-8080-4f1d-b7c5-ffd33d87a688) | ![Rating](https://github.com/user-attachments/assets/d0646c4a-6788-4d52-896d-730df43af133) | ![Ticket](https://github.com/user-attachments/assets/062b4db4-45c5-4490-9fb2-e50c98dc22a2) |
+
+
