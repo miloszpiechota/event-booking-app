@@ -88,7 +88,7 @@ Event Booking Mobile App is a continuation of the [Event Booking Web App](#modul
 ## 🚀 Installation & Usage
 
 ```bash
-cd eventhub-mobile
+cd event-booking-app
 npm install
 npx expo start
 ```
