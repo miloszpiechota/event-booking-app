@@ -1,4 +1,4 @@
-# 📱 Event Booking OPlatform – Ticket Validation & Event Review 
+# 📱 Event Booking Mobile App – Ticket Validation & Event Review 
 
 ## 📚 Table of Contents
 
